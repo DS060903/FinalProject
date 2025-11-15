@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Users - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <div style="display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start;">
+        <!-- Sidebar -->
+        <div>
+            {% include "admin/_sidebar.html" %}
+        </div>
+        
+        <!-- Main Content -->
+        <div>
+            <!-- Header -->
+            <div style="margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                    <i class="bi bi-people-fill text-crimson"></i> Users
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0;">View all system users</p>
+            </div>
+        
+        <!-- Role Filter -->
+            <div class="card-iu" style="margin-bottom: 32px; padding: 24px;">
+                <form method="GET" action="{{ url_for('admin.users') }}">
+                    <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: end;">
+                        <div style="min-width: 200px;">
+                            <label class="form-label-iu" style="margin-bottom: 8px;">Filter by Role</label>
+                            <select class="form-control-iu" id="role" name="role">
+                        <option value="">All Roles</option>
+                        <option value="student" {% if role_filter == 'student' %}selected{% endif %}>Student</option>
+                        <option value="staff" {% if role_filter == 'staff' %}selected{% endif %}>Staff</option>
+                        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admin</option>
+                    </select>
+                </div>
+                        <div></div>
+                        <button type="submit" class="btn-iu btn-iu-primary" style="padding: 12px 24px;">
+                            <i class="bi bi-funnel-fill"></i> Filter
+                        </button>
+            </div>
+        </form>
+            </div>
+        
+        {% if users %}
+            <!-- Users Table Card -->
+            <div class="card-iu" style="overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%); padding: 20px; color: white;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">
+                        <i class="bi bi-people-fill"></i> System Users
+                        <span class="badge-iu badge-iu-light" style="font-size: 13px; padding: 4px 10px; margin-left: 12px;">{{ users|length }}</span>
+                    </h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                            <tr style="background: #FFF8F0; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">ID</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Email</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Role</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ user.id }}</td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="bi bi-person-circle-fill" style="color: var(--text-secondary);"></i>
+                                        <span style="color: var(--text-primary); font-weight: 500;">{{ user.email }}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <span class="badge-iu {% if user.role.value == 'admin' %}badge-iu-crimson{% elif user.role.value == 'staff' %}badge-iu-warning{% else %}badge-iu-info{% endif %}" style="font-size: 12px; padding: 5px 10px;">
+                                        {{ user.role.value|title }}
+                                    </span>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ user.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert-iu alert-iu-info" style="padding: 32px; text-align: center;">
+                <i class="bi bi-info-circle-fill" style="font-size: 48px; color: var(--info); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">No Users Found</h3>
+                <p style="margin: 0; color: var(--text-secondary);">No users match the selected filter.</p>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

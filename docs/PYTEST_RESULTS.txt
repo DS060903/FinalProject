@@ -1,0 +1,88 @@
+PYTEST RESULTS - Campus Resource Hub
+====================================
+
+Test Run Date: November 11, 2025
+Platform: Windows (win32)
+Python: 3.13.7
+Pytest: 7.4.3
+
+SUMMARY
+-------
+✅ 31 tests passed (100%)
+❌ 0 failures
+⏭️ 0 skipped
+⏱️ Duration: 23.30 seconds
+⚠️ 249 warnings (library deprecations - not errors)
+
+DETAILED RESULTS
+----------------
+
+Integration Tests (4 tests):
+  ✅ test_auth_flow.py::test_register_login_protected_route_flow
+  ✅ test_auth_flow.py::test_login_with_invalid_credentials_fails
+  ✅ test_route_negative.py::test_booking_with_invalid_dates_returns_400
+  ✅ test_route_negative.py::test_missing_required_field_returns_error
+
+Unit Tests - Booking Conflicts (3 tests):
+  ✅ test_booking_conflicts.py::test_overlapping_bookings_conflict
+  ✅ test_booking_conflicts.py::test_non_overlapping_bookings_no_conflict
+  ✅ test_booking_conflicts.py::test_adjacent_bookings_no_conflict
+
+Unit Tests - Booking Status (5 tests):
+  ✅ test_booking_status.py::test_pending_to_approved_transition
+  ✅ test_booking_status.py::test_pending_to_rejected_transition
+  ✅ test_booking_status.py::test_approved_to_cancelled_transition
+  ✅ test_booking_status.py::test_approved_to_completed_transition
+  ✅ test_booking_status.py::test_invalid_transition_rejected_to_approved_fails
+
+Unit Tests - DAL CRUD (7 tests):
+  ✅ test_dal_crud.py::test_create_user_dal
+  ✅ test_dal_crud.py::test_get_user_by_email_dal
+  ✅ test_dal_crud.py::test_create_resource_dal
+  ✅ test_dal_crud.py::test_list_resources_dal
+  ✅ test_dal_crud.py::test_update_resource_dal
+  ✅ test_dal_crud.py::test_create_booking_dal
+  ✅ test_dal_crud.py::test_list_bookings_for_user_dal
+
+Unit Tests - Security (5 tests):
+  ✅ test_security_utils.py::test_sql_injection_prevented_in_email_lookup
+  ✅ test_security_utils.py::test_parameterized_queries_used_in_dal
+  ✅ test_security_utils.py::test_sanitize_body_removes_blocked_words
+  ✅ test_security_utils.py::test_sanitize_body_handles_empty_input
+  ✅ test_security_utils.py::test_sanitize_body_enforces_length_limit
+
+Unit Tests - Validation (7 tests):
+  ✅ test_validation_utils.py::test_validate_pagination_normal
+  ✅ test_validation_utils.py::test_validate_pagination_bounds
+  ✅ test_validation_utils.py::test_validate_pagination_invalid_type
+  ✅ test_validation_utils.py::test_validate_time_window_valid
+  ✅ test_validation_utils.py::test_validate_time_window_invalid_end_before_start
+  ✅ test_validation_utils.py::test_validate_time_window_same_time
+  ✅ test_validation_utils.py::test_validate_time_window_minimum_duration
+
+WARNINGS BREAKDOWN
+------------------
+⚠️ Email Validator (84 warnings) - Library deprecation, not a test issue
+⚠️ SQLAlchemy datetime.utcnow() (90 warnings) - Python 3.13 deprecation
+⚠️ SQLAlchemy Query.get() (75 warnings) - Legacy API, still functional
+
+Note: All warnings are from external library deprecations, not test failures.
+
+ASSIGNMENT COMPLIANCE
+---------------------
+✅ ≥5 unit tests required → 27 provided (540% compliance)
+✅ ≥2 integration tests required → 4 provided (200% compliance)
+✅ DAL test (route-independent) → 7 tests in test_dal_crud.py
+✅ SQL injection test → test_sql_injection_prevented_in_email_lookup
+✅ 6 manual tests (3+/3-) → Documented in tests/manual/TEST_PLAN.md
+✅ All tests pass locally → 31/31 passing (100%)
+
+COMMAND TO REPRODUCE
+--------------------
+pytest tests/ -v --tb=short
+
+For detailed documentation, see:
+- docs/TESTING.md (comprehensive test documentation)
+- tests/README.md (test suite overview)
+- tests/manual/TEST_PLAN.md (manual test cases)
+

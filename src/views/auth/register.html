@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div style="min-height: calc(100vh - 160px); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #FFF8F0 0%, #F7EBE0 100%); padding: 40px 20px;">
+    <div style="width: 100%; max-width: 600px;">
+        <div class="card-iu" style="padding: 40px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Create your account</h1>
+                <p style="color: var(--text-secondary);">Join the IU Resource Hub community</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('auth.register') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                
+                <div class="form-group-iu">
+                    <label class="form-label-iu">
+                        <i class="bi bi-envelope-fill"></i> Email Address
+                    </label>
+                    <input type="email" class="form-control-iu" name="email" value="{{ email or '' }}" required placeholder="your.email@iu.edu">
+                    <p class="form-text-iu">Use your IU email address</p>
+                </div>
+                
+                <div class="form-group-iu">
+                    <label class="form-label-iu">
+                        <i class="bi bi-lock-fill"></i> Password
+                    </label>
+                    <input type="password" class="form-control-iu" name="password" required minlength="8" placeholder="Create a strong password">
+                    <div style="background: #FFF8F0; padding: 12px; border-radius: var(--border-radius); margin-top: 8px; border-left: 3px solid var(--iu-crimson);">
+                        <p style="font-size: 13px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">Password Requirements:</p>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                            <li>At least 8 characters</li>
+                            <li>One uppercase letter (A-Z)</li>
+                            <li>One lowercase letter (a-z)</li>
+                            <li>One number (0-9)</li>
+                            <li>One special character (!@#$%^&*)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="form-group-iu">
+                    <label class="form-label-iu">
+                        <i class="bi bi-person-badge-fill"></i> Role
+                    </label>
+                    <select class="form-control-iu" name="role">
+                        <option value="student" selected>Student</option>
+                        <option value="staff">Staff</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <p class="form-text-iu">Select your role (most users should choose Student)</p>
+                </div>
+                
+                <button type="submit" class="btn-iu btn-iu-primary" style="width: 100%; margin-top: 8px;">
+                    <i class="bi bi-person-plus-fill"></i> Create Account
+                </button>
+                
+                <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Already have an account? <a href="{{ url_for('auth.login') }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 600;">Log in</a>
+                    </p>
+                </div>
+            </form>
+        </div>
+        
+        <div class="alert-iu alert-iu-info" style="margin-top: 24px;">
+            <i class="bi bi-shield-check-fill"></i>
+            <div>
+                <strong>Secure Registration</strong>
+                <p style="margin: 4px 0 0 0; font-size: 13px;">Your password is securely hashed and never stored in plain text</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

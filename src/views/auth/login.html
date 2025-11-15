@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Log In - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div style="min-height: calc(100vh - 160px); display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #FFF8F0 0%, #F7EBE0 100%); padding: 40px 20px;">
+    <div style="width: 100%; max-width: 1000px; display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start;">
+        <!-- Login Form -->
+        <div class="card-iu" style="padding: 40px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin-bottom: 8px;">Welcome back</h1>
+                <p style="color: var(--text-secondary);">Log in to your IU Resource Hub account</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('auth.login') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                <div class="form-group-iu">
+                    <label class="form-label-iu">
+                        <i class="bi bi-envelope-fill"></i> Email Address
+                        </label>
+                    <input type="email" class="form-control-iu" name="email" value="{{ email or '' }}" required placeholder="your.email@iu.edu">
+                    </div>
+                    
+                <div class="form-group-iu">
+                    <label class="form-label-iu">
+                        <i class="bi bi-lock-fill"></i> Password
+                        </label>
+                    <input type="password" class="form-control-iu" name="password" required placeholder="Enter your password">
+                    </div>
+                    
+                <button type="submit" class="btn-iu btn-iu-primary" style="width: 100%; margin-top: 8px;">
+                    <i class="bi bi-box-arrow-in-right"></i> Log In
+                        </button>
+                    
+                <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border-color);">
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Don't have an account? <a href="{{ url_for('auth.register') }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 600;">Sign up</a>
+                    </p>
+                    </div>
+                </form>
+        </div>
+        
+        <!-- Demo Credentials -->
+        <div>
+            <div class="card-iu" style="padding: 32px; background: #FFF8F0; border: 2px solid var(--iu-crimson);">
+                <h2 style="font-size: 20px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
+                    <i class="bi bi-info-circle-fill text-crimson"></i> Demo Accounts
+                </h2>
+                
+                <div style="display: grid; gap: 16px;">
+                    <!-- Admin -->
+                    <div style="background: white; padding: 16px; border-radius: var(--border-radius); border-left: 4px solid #990000;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span class="badge-iu badge-iu-crimson">ADMIN</span>
+                            <code style="background: #FFF8F0; padding: 4px 8px; border-radius: 4px; font-size: 13px;">admin@demo.edu / Admin123!</code>
+                        </div>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                            <li>Approve/reject any booking</li>
+                            <li>Access admin dashboard</li>
+                            <li>Manage all resources</li>
+                            <li>Moderate content</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Staff -->
+                    <div style="background: white; padding: 16px; border-radius: var(--border-radius); border-left: 4px solid #FFB800;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span class="badge-iu badge-iu-warning">STAFF</span>
+                            <code style="background: #FFF8F0; padding: 4px 8px; border-radius: 4px; font-size: 13px;">staff@demo.edu / Staff123!</code>
+                        </div>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                            <li>Create and edit resources</li>
+                            <li>Book resources</li>
+                            <li>Write reviews and messages</li>
+                            <li>Same as students otherwise</li>
+                        </ul>
+                    </div>
+                    
+                    <!-- Student -->
+                    <div style="background: white; padding: 16px; border-radius: var(--border-radius); border-left: 4px solid #0066CC;">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                            <span class="badge-iu badge-iu-info">STUDENT</span>
+                            <code style="background: #FFF8F0; padding: 4px 8px; border-radius: 4px; font-size: 13px;">student@demo.edu / Student123!</code>
+                        </div>
+                        <ul style="margin: 0; padding-left: 20px; font-size: 13px; color: var(--text-secondary); line-height: 1.6;">
+                            <li>Browse and book resources</li>
+                            <li>Write reviews after booking</li>
+                            <li>Send messages to owners/admin</li>
+                            <li>View booking history</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="alert-iu alert-iu-info" style="margin-top: 20px; font-size: 13px;">
+                    <i class="bi bi-lightbulb-fill"></i>
+                    <span>Use these demo accounts to explore the platform's features and capabilities</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

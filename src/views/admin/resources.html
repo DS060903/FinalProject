@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Resources - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <div style="display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start;">
+        <!-- Sidebar -->
+        <div>
+            {% include "admin/_sidebar.html" %}
+        </div>
+        
+        <!-- Main Content -->
+        <div>
+            <!-- Header -->
+            <div style="margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                    <i class="bi bi-building-fill text-crimson"></i> Resources
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0;">Manage all system resources</p>
+            </div>
+        
+        <!-- Status Filter -->
+            <div class="card-iu" style="margin-bottom: 32px; padding: 24px;">
+                <form method="GET" action="{{ url_for('admin.resources') }}">
+                    <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: end;">
+                        <div style="min-width: 200px;">
+                            <label class="form-label-iu" style="margin-bottom: 8px;">Filter by Status</label>
+                            <select class="form-control-iu" id="status" name="status">
+                        <option value="">All Statuses</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                        <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                </div>
+                        <div></div>
+                        <button type="submit" class="btn-iu btn-iu-primary" style="padding: 12px 24px;">
+                            <i class="bi bi-funnel-fill"></i> Filter
+                        </button>
+            </div>
+        </form>
+            </div>
+        
+        {% if resources %}
+            <!-- Resources Table Card -->
+            <div class="card-iu" style="overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%); padding: 20px; color: white;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">
+                        <i class="bi bi-building-fill"></i> System Resources
+                        <span class="badge-iu badge-iu-light" style="font-size: 13px; padding: 4px 10px; margin-left: 12px;">{{ resources|length }}</span>
+                    </h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                            <tr style="background: #FFF8F0; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">ID</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Title</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Category</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Location</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Capacity</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Status</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Rating</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Created</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for resource in resources %}
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ resource.id }}</td>
+                                <td style="padding: 16px;">
+                                    <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 500;">
+                                        {{ resource.title }}
+                                    </a>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ resource.category or 'N/A' }}</td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ resource.location or 'N/A' }}</td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ resource.capacity }}</td>
+                                <td style="padding: 16px;">
+                                    <span class="badge-iu {% if resource.status.value == 'published' %}badge-iu-success{% elif resource.status.value == 'archived' %}badge-iu-light{% else %}badge-iu-warning{% endif %}" style="font-size: 12px; padding: 5px 10px;">
+                                        {{ resource.status.value|title }}
+                                    </span>
+                                </td>
+                                <td style="padding: 16px;">
+                                    {% if resource.rating_count > 0 %}
+                                    <div style="display: flex; align-items: center; gap: 4px;">
+                                        <i class="bi bi-star-fill" style="color: #FFB800; font-size: 14px;"></i>
+                                        <span style="color: var(--text-primary); font-weight: 500; font-size: 14px;">{{ "%.1f"|format(resource.rating_avg) }}</span>
+                                        <span style="color: var(--text-secondary); font-size: 13px;">({{ resource.rating_count }})</span>
+                                    </div>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 13px;">No ratings</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ resource.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert-iu alert-iu-info" style="padding: 32px; text-align: center;">
+                <i class="bi bi-info-circle-fill" style="font-size: 48px; color: var(--info); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">No Resources Found</h3>
+                <p style="margin: 0; color: var(--text-secondary);">No resources match the selected filter.</p>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

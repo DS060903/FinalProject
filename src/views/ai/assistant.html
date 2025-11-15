@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}AI Concierge - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 48px; margin-bottom: 64px; max-width: 1000px;">
+    <!-- Header -->
+    <div style="text-align: center; margin-bottom: 56px;">
+        <h1 style="font-size: 40px; font-weight: 700; color: var(--text-primary); margin-bottom: 16px;">
+            <i class="bi bi-robot text-crimson"></i> AI Concierge
+        </h1>
+        <p style="color: var(--text-secondary); font-size: 20px; margin: 0;">
+            Ask questions, discover resources, or draft polite replies
+        </p>
+    </div>
+
+    <!-- Query Form Card -->
+    <div class="card-iu" style="margin-bottom: 40px; padding: 40px;">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 28px;">
+            <i class="bi bi-chat-quote-fill text-crimson"></i> Ask a Question
+        </h2>
+        
+        <form id="ai-form">
+            <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 20px; align-items: end;">
+                <div style="min-width: 200px;">
+                    <label class="form-label-iu" style="margin-bottom: 10px; font-size: 15px;">Mode</label>
+                    <select class="form-control-iu" id="mode" style="padding: 14px 16px; font-size: 15px;">
+                        <option value="help">Help / How-to</option>
+                        <option value="discover">Discover Resources</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label class="form-label-iu" style="margin-bottom: 10px; font-size: 15px;">Your Question</label>
+                    <input 
+                        class="form-control-iu" 
+                        id="query" 
+                        placeholder="Ask a question or describe what you need…" 
+                        required
+                        style="padding: 14px 16px; font-size: 15px;"
+                    />
+                    <p class="form-text-iu" style="margin-top: 10px; font-size: 14px; line-height: 1.5;">
+                        Examples: "How do I book a resource?", "Find quiet study spaces", "Why is my booking pending?"
+                    </p>
+                </div>
+                <button class="btn-iu btn-iu-primary" type="submit" style="padding: 14px 24px; font-size: 15px; white-space: nowrap;">
+                    <i class="bi bi-send-fill"></i> Ask
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Answer Display Card -->
+    <div id="ai-answer" class="card-iu d-none" style="margin-bottom: 40px; padding: 40px;">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 24px;">
+            <i class="bi bi-check-circle-fill text-crimson"></i> Answer
+        </h2>
+        <div id="answer-text" style="white-space: pre-wrap; line-height: 1.8; color: var(--text-secondary); margin-bottom: 24px; font-size: 16px;"></div>
+        <div id="sources-container" class="d-none">
+            <div style="border-top: 1px solid var(--border-color); padding-top: 28px; margin-top: 28px;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 20px; color: var(--text-primary);">
+                    <i class="bi bi-building-fill"></i> Matching Resources
+                </h3>
+                <div id="sources-list" style="display: grid; gap: 16px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draft Reply Section -->
+    <div class="card-iu" style="padding: 40px;">
+        <h2 style="font-size: 24px; font-weight: 600; margin-bottom: 28px;">
+            <i class="bi bi-pencil-fill text-crimson"></i> Draft a Polite Reply
+        </h2>
+        
+        <form id="draft-form">
+            <div class="form-group-iu" style="margin-bottom: 24px;">
+                <label class="form-label-iu" style="margin-bottom: 10px; font-size: 15px;">Instruction</label>
+                <input 
+                    class="form-control-iu" 
+                    id="draft-input" 
+                    placeholder="e.g., reply to a booking request asking for more details"
+                    required
+                    style="padding: 14px 16px; font-size: 15px;"
+                />
+                <p class="form-text-iu" style="margin-top: 10px; font-size: 14px;">Describe what you want the reply to say or accomplish.</p>
+            </div>
+            <button class="btn-iu btn-iu-primary" type="submit" style="padding: 14px 28px; font-size: 15px;">
+                <i class="bi bi-magic"></i> Generate Draft
+            </button>
+        </form>
+        
+        <div id="draft-out" class="card-iu d-none" style="margin-top: 32px; background: #FFF8F0; border-left: 4px solid var(--iu-crimson); padding: 28px;">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">Generated Draft</h3>
+            <pre id="draft-text" style="white-space: pre-wrap; font-family: inherit; background: white; padding: 20px; border-radius: var(--border-radius); margin-bottom: 16px; line-height: 1.8; color: var(--text-secondary); font-size: 15px;"></pre>
+            <button class="btn-iu btn-iu-secondary" onclick="copyDraft()" style="padding: 12px 24px;">
+                <i class="bi bi-clipboard-fill"></i> Copy to Clipboard
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const askForm = document.getElementById('ai-form');
+const ansCard = document.getElementById('ai-answer');
+const ansText = document.getElementById('answer-text');
+const sourcesContainer = document.getElementById('sources-container');
+const sourcesList = document.getElementById('sources-list');
+
+askForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const mode = document.getElementById('mode').value;
+    const query = document.getElementById('query').value;
+    
+    if (!query.trim()) {
+        alert('Please enter a question.');
+        return;
+    }
+    
+    ansText.textContent = "Thinking…";
+    ansText.style.color = "var(--text-secondary)";
+    ansCard.classList.remove('d-none');
+    sourcesContainer.classList.add('d-none');
+    
+    try {
+        const r = await fetch("/ai/assistant/ask", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({ mode, query })
+        });
+        
+        const contentType = r.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await r.text();
+            ansText.textContent = "Error: Server returned non-JSON response. Please refresh the page and try again.";
+            ansText.style.color = "var(--error)";
+            console.error("Non-JSON response:", text.substring(0, 200));
+            return;
+        }
+        
+        const j = await r.json();
+        
+        if (!r.ok) {
+            ansText.textContent = "Error: " + (j.error || `HTTP ${r.status}`);
+            ansText.style.color = "var(--error)";
+            return;
+        }
+        
+        if (j.error) {
+            ansText.textContent = "Error: " + j.error;
+            ansText.style.color = "var(--error)";
+            return;
+        }
+        
+        let answer = j.answer || "(no answer)";
+        answer = answer.replace(/\*\*/g, '');
+        answer = answer.replace(/\*/g, '');
+        answer = answer.replace(/\n\n/g, '\n');
+        
+        ansText.textContent = answer;
+        ansText.style.color = "var(--text-secondary)";
+        
+        if (j.sources && j.sources.length > 0) {
+            sourcesList.innerHTML = '';
+            j.sources.forEach(source => {
+                const item = document.createElement('a');
+                item.href = `/resources/${source.id}`;
+                item.style.cssText = 'display: block; padding: 16px; background: white; border-radius: var(--border-radius); border: 1px solid var(--border-color); text-decoration: none; color: inherit; transition: all 0.2s;';
+                item.onmouseover = function() { this.style.borderColor = 'var(--iu-crimson)'; this.style.boxShadow = 'var(--shadow-sm)'; };
+                item.onmouseout = function() { this.style.borderColor = 'var(--border-color)'; this.style.boxShadow = 'none'; };
+                item.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                        <h4 style="font-size: 16px; font-weight: 600; margin: 0; color: var(--text-primary);">${source.title}</h4>
+                        <span class="badge-iu badge-iu-light">#${source.id}</span>
+                    </div>
+                    <p style="margin: 0; font-size: 14px; color: var(--text-secondary);">
+                        ${source.category || 'N/A'} • ${source.location || 'N/A'} • Capacity: ${source.capacity || '—'}
+                        ${source.rating ? ` • <span style="color: var(--warning);">★ ${source.rating.toFixed(1)}</span>` : ''}
+                    </p>
+                `;
+                sourcesList.appendChild(item);
+            });
+            sourcesContainer.classList.remove('d-none');
+        }
+    } catch (error) {
+        ansText.textContent = "Error: " + error.message;
+        ansText.style.color = "var(--error)";
+        console.error("Fetch error:", error);
+    }
+});
+
+const draftForm = document.getElementById('draft-form');
+const draftOut = document.getElementById('draft-out');
+const draftText = document.getElementById('draft-text');
+
+draftForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const prompt = document.getElementById('draft-input').value;
+    
+    if (!prompt.trim()) {
+        alert('Please enter an instruction.');
+        return;
+    }
+    
+    draftText.textContent = "Drafting…";
+    draftText.style.color = "var(--text-secondary)";
+    draftOut.classList.remove('d-none');
+    
+    try {
+        const r = await fetch("/ai/assistant/draft", {
+            method: "POST",
+            headers: { 
+                "Content-Type": "application/json",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            credentials: "same-origin",
+            body: JSON.stringify({ prompt })
+        });
+        
+        const contentType = r.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+            const text = await r.text();
+            draftText.textContent = "Error: Server returned non-JSON response. Please refresh the page and try again.";
+            draftText.style.color = "var(--error)";
+            console.error("Non-JSON response:", text.substring(0, 200));
+            return;
+        }
+        
+        const j = await r.json();
+        
+        if (!r.ok) {
+            draftText.textContent = "Error: " + (j.error || `HTTP ${r.status}`);
+            draftText.style.color = "var(--error)";
+            return;
+        }
+        
+        if (j.error) {
+            draftText.textContent = "Error: " + j.error;
+            draftText.style.color = "var(--error)";
+        } else {
+            let draft = j.draft || j.error || "(no draft)";
+            draft = draft.replace(/\*\*/g, '');
+            draft = draft.replace(/\*/g, '');
+            
+            draftText.textContent = draft;
+            draftText.style.color = "var(--text-secondary)";
+        }
+    } catch (error) {
+        draftText.textContent = "Error: " + error.message;
+        draftText.style.color = "var(--error)";
+        console.error("Fetch error:", error);
+    }
+});
+
+function copyDraft() {
+    const text = draftText.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        alert('Draft copied to clipboard!');
+    }).catch(err => {
+        console.error('Failed to copy:', err);
+    });
+}
+</script>
+{% endblock %}

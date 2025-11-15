@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Reviews - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <div style="display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start;">
+    <!-- Sidebar -->
+        <div>
+            {% include "admin/_sidebar.html" %}
+    </div>
+    
+    <!-- Main Content -->
+        <div>
+            <!-- Header -->
+            <div style="margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                    <i class="bi bi-star-fill text-crimson"></i> Reviews
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0;">Manage and moderate reviews</p>
+            </div>
+
+        <!-- Admin-Only Alert -->
+            <div class="alert-iu alert-iu-error" style="margin-bottom: 32px; padding: 20px;">
+                <i class="bi bi-shield-lock-fill" style="font-size: 24px;"></i>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">
+                        <span class="badge-iu badge-iu-crimson" style="font-size: 12px; padding: 4px 10px; margin-right: 8px;">ADMIN ONLY</span>
+                        Review Moderation Control
+                    </h3>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5;">
+                        As an <strong>Administrator</strong>, you can manage reported reviews and hide/unhide <strong>any review</strong> in the system. 
+                        Hidden reviews are excluded from rating averages and public view. 
+                        <span style="color: var(--iu-crimson); font-weight: 600;">Only admins can moderate reviews - staff and students cannot.</span>
+                    </p>
+                </div>
+        </div>
+        
+        <!-- Reported Reviews Section -->
+        {% if reported_reviews %}
+            <div class="card-iu" style="overflow: hidden; margin-bottom: 32px;">
+                <div style="background: linear-gradient(135deg, #FF9800 0%, #F57C00 100%); padding: 20px; color: white;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">
+                        <i class="bi bi-flag-fill"></i> Reported Reviews ({{ reported_reviews|length }})
+                    </h3>
+            </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #FFF8F0; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">ID</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Resource</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Reviewer</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Rating</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Comment Preview</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Created</th>
+                                <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--text-primary); font-size: 14px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in reported_reviews %}
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 16px;">
+                                    <strong style="color: var(--text-primary);">#{{ review.id }}</strong>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <a href="{{ url_for('resources.detail', resource_id=review.resource_id) }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 500;">
+                                        <i class="bi bi-building-fill"></i> Resource #{{ review.resource_id }}
+                                    </a>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="bi bi-person-circle-fill" style="color: var(--text-secondary);"></i>
+                                        <div>
+                                            <div style="font-weight: 500; color: var(--text-primary); font-size: 14px;">{{ review.user.email }}</div>
+                                            <span class="badge-iu badge-iu-info" style="font-size: 11px; padding: 3px 8px; margin-top: 4px;">{{ review.user.role.value|title }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        {% for i in range(5) %}
+                                        <i class="bi bi-star{{ '-fill' if i < review.rating else '' }}" style="color: {{ '#FFB800' if i < review.rating else '#E0E0E0' }}; font-size: 14px;"></i>
+                                        {% endfor %}
+                                        <span style="color: var(--text-secondary); font-size: 13px; margin-left: 4px;">{{ review.rating }}/5</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: start; gap: 8px;">
+                                        <span class="badge-iu badge-iu-warning" style="font-size: 11px; padding: 3px 8px;">
+                                            <i class="bi bi-flag-fill"></i> Reported
+                                    </span>
+                                        <span style="color: var(--text-secondary); font-size: 14px;">{{ review.comment[:100] }}{% if review.comment|length > 100 %}...{% endif %}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ review.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        <form method="POST" action="{{ url_for('admin.unreport_review_action', review_id=review.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn-iu btn-iu-secondary" style="padding: 6px 12px; font-size: 13px;">
+                                                <i class="bi bi-check-circle-fill"></i> Clear Report
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('reviews.hide', resource_id=review.resource_id, review_id=review.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn-iu btn-iu-outline" style="padding: 6px 12px; font-size: 13px;" onclick="return confirm('Hide this review?')">
+                                                <i class="bi bi-eye-slash-fill"></i> Hide
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+        {% else %}
+            <div class="alert-iu alert-iu-success" style="padding: 32px; text-align: center; margin-bottom: 32px;">
+                <i class="bi bi-check-circle-fill" style="font-size: 48px; color: var(--success); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">No Reported Reviews</h3>
+                <p style="margin: 0; color: var(--text-secondary);">No reviews have been reported by users.</p>
+        </div>
+        {% endif %}
+
+        <!-- Hidden Reviews Section -->
+        {% if hidden_reviews %}
+            <div class="card-iu" style="overflow: hidden;">
+                <div style="background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); padding: 20px; color: white;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">
+                        <i class="bi bi-eye-slash-fill"></i> Hidden Reviews ({{ hidden_reviews|length }})
+                    </h3>
+            </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #FFF8F0; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">ID</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Resource</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Reviewer</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Rating</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Comment Preview</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Created</th>
+                                <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--text-primary); font-size: 14px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for review in hidden_reviews %}
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 16px;">
+                                    <strong style="color: var(--text-primary);">#{{ review.id }}</strong>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <a href="{{ url_for('resources.detail', resource_id=review.resource_id) }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 500;">
+                                        <i class="bi bi-building-fill"></i> Resource #{{ review.resource_id }}
+                                    </a>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="bi bi-person-circle-fill" style="color: var(--text-secondary);"></i>
+                                        <div>
+                                            <div style="font-weight: 500; color: var(--text-primary); font-size: 14px;">{{ review.user.email }}</div>
+                                            <span class="badge-iu badge-iu-info" style="font-size: 11px; padding: 3px 8px; margin-top: 4px;">{{ review.user.role.value|title }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        {% for i in range(5) %}
+                                        <i class="bi bi-star{{ '-fill' if i < review.rating else '' }}" style="color: {{ '#FFB800' if i < review.rating else '#E0E0E0' }}; font-size: 14px;"></i>
+                                        {% endfor %}
+                                        <span style="color: var(--text-secondary); font-size: 13px; margin-left: 4px;">{{ review.rating }}/5</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: start; gap: 8px;">
+                                        <span class="badge-iu badge-iu-light" style="font-size: 11px; padding: 3px 8px;">
+                                            <i class="bi bi-eye-slash-fill"></i> Hidden
+                                    </span>
+                                        <span style="color: var(--text-secondary); font-size: 14px;">{{ review.comment[:100] }}{% if review.comment|length > 100 %}...{% endif %}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ review.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td style="padding: 16px;">
+                                    <form method="POST" action="{{ url_for('admin.unhide_review_action', review_id=review.id) }}" style="display: inline;">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                        <button type="submit" class="btn-iu btn-iu-primary" style="padding: 6px 12px; font-size: 13px;">
+                                            <i class="bi bi-eye-fill"></i> Unhide
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+        {% else %}
+            <div class="alert-iu alert-iu-success" style="padding: 32px; text-align: center;">
+                <i class="bi bi-check-circle-fill" style="font-size: 48px; color: var(--success); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">No Hidden Reviews</h3>
+                <p style="margin: 0; color: var(--text-secondary);">No reviews are currently hidden. All reviews are visible.</p>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

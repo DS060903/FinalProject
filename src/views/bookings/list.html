@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}My Bookings - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <!-- Header -->
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 32px;">
+        <div>
+            <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                <i class="bi bi-calendar-check-fill text-crimson"></i> My Bookings
+            </h1>
+            <p style="color: var(--text-secondary); margin: 0;">Manage your resource reservations</p>
+        </div>
+        {% if current_user.role.value == 'admin' %}
+        <a href="{{ url_for('admin.bookings') }}" class="btn-iu btn-iu-outline">
+            <i class="bi bi-clipboard-check-fill"></i> Pending Approvals
+            <span class="badge-iu badge-iu-crimson ms-2">Admin</span>
+    </a>
+    {% endif %}
+</div>
+
+{% if current_user.role.value in ['staff', 'admin'] %}
+    <div class="alert-iu alert-iu-info" style="margin-bottom: 24px;">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            <strong>{{ current_user.role.value|title }} Access:</strong>
+        {% if current_user.role.value == 'admin' %}
+            You can approve/reject any booking, manage all resources, and moderate content.
+        {% else %}
+            You can create and manage your own resources.
+        {% endif %}
+        </div>
+</div>
+{% endif %}
+
+{% if bookings %}
+    <!-- Bookings Grid -->
+    <div class="grid-iu">
+    {% for booking in bookings %}
+        <div class="card-iu">
+            <div class="card-iu-body">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                    <div>
+                        <h3 class="card-iu-title" style="margin-bottom: 4px;">
+                            Booking #{{ booking.id }}
+                        </h3>
+                        <p class="card-iu-subtitle" style="margin: 0;">
+                            <i class="bi bi-building-fill"></i> {{ booking.resource.title }}
+                        </p>
+                    </div>
+                    <span class="badge-iu {% if booking.status.value == 'approved' %}badge-iu-success{% elif booking.status.value == 'pending' %}badge-iu-warning{% elif booking.status.value == 'completed' %}badge-iu-light{% else %}badge-iu-crimson{% endif %}">
+                    {{ booking.status.value|title }}
+                </span>
+            </div>
+
+                <div style="display: grid; gap: 12px; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary);">
+                        <i class="bi bi-calendar-event-fill"></i>
+                        <span><strong>Start:</strong> {{ booking.start_dt.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary);">
+                        <i class="bi bi-calendar-x-fill"></i>
+                        <span><strong>End:</strong> {{ booking.end_dt.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary);">
+                        <i class="bi bi-clock-fill"></i>
+                        <span><strong>Duration:</strong> {{ ((booking.end_dt - booking.start_dt).total_seconds() / 3600)|round(1) }} hours</span>
+                    </div>
+                </div>
+                
+                {% if current_user.role.value in ['staff', 'admin'] and booking.status.value == 'pending' %}
+                <div class="alert-iu alert-iu-warning" style="margin-bottom: 16px; font-size: 13px;">
+                    <i class="bi bi-exclamation-triangle-fill"></i>
+                    <span>This booking needs approval</span>
+                </div>
+                {% endif %}
+                
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <a href="{{ url_for('bookings.detail', booking_id=booking.id) }}" class="btn-iu btn-iu-primary" style="flex: 1; min-width: 120px;">
+                        <i class="bi bi-eye-fill"></i> View Details
+                    </a>
+                    <a href="{{ url_for('messaging.list_messages', booking_id=booking.id) }}" class="btn-iu btn-iu-outline" style="flex: 1; min-width: 120px;">
+                        <i class="bi bi-chat-fill"></i> Messages
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% else %}
+    <!-- Empty State -->
+    <div style="text-align: center; padding: 80px 24px; background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm);">
+        <i class="bi bi-calendar-x" style="font-size: 64px; color: var(--border-color); margin-bottom: 24px; display: block;"></i>
+        <h3 style="font-size: 24px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">No Bookings Yet</h3>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Start by browsing available resources and making your first booking</p>
+        <a href="{{ url_for('resources.list_resources') }}" class="btn-iu btn-iu-primary">
+            <i class="bi bi-search"></i> Browse Resources
+        </a>
+</div>
+{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <div style="display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start;">
+        <!-- Sidebar -->
+        <div>
+            {% include "admin/_sidebar.html" %}
+        </div>
+        
+        <!-- Main Content -->
+        <div>
+            <!-- Header -->
+            <div style="margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                    <i class="bi bi-journal-text-fill text-crimson"></i> Audit Logs
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0;">View admin action history</p>
+            </div>
+
+            <div class="alert-iu alert-iu-info" style="margin-bottom: 32px; padding: 20px;">
+                <i class="bi bi-info-circle-fill"></i>
+                <div>
+                    <strong>Audit Trail:</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 14px; color: var(--text-secondary);">
+                        Complete log of all administrative actions including approvals, rejections, moderation, and system changes.
+                    </p>
+                </div>
+            </div>
+        
+        {% if logs %}
+            <!-- Logs Table Card -->
+            <div class="card-iu" style="overflow: hidden;">
+                <div style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%); padding: 20px; color: white;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">
+                        <i class="bi bi-journal-text-fill"></i> Admin Action Logs
+                        <span class="badge-iu badge-iu-light" style="font-size: 13px; padding: 4px 10px; margin-left: 12px;">{{ logs|length }}</span>
+                    </h3>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                            <tr style="background: #FFF8F0; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">ID</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Admin</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Action</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Target</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Details</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">IP Address</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ log.id }}</td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="bi bi-shield-lock-fill" style="color: var(--iu-crimson);"></i>
+                                        <span style="color: var(--text-primary); font-weight: 500; font-size: 14px;">{{ log.admin.email }}</span>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <span class="badge-iu badge-iu-info" style="font-size: 12px; padding: 5px 10px;">
+                                        {{ log.action }}
+                                    </span>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ log.target_table }} #{{ log.target_id }}</td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px; max-width: 300px;">
+                                    <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                        {{ log.details[:100] if log.details else 'N/A' }}{% if log.details and log.details|length > 100 %}...{% endif %}
+                                    </div>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ log.ip_addr or 'N/A' }}</td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+                </div>
+            </div>
+        {% else %}
+            <div class="alert-iu alert-iu-info" style="padding: 32px; text-align: center;">
+                <i class="bi bi-info-circle-fill" style="font-size: 48px; color: var(--info); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">No Logs Found</h3>
+                <p style="margin: 0; color: var(--text-secondary);">No admin actions have been logged yet.</p>
+        </div>
+        {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

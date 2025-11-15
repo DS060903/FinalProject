@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Resources - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="container" style="margin-top: 32px; margin-bottom: 32px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+        <div>
+            <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                <i class="bi bi-grid-3x3-gap-fill text-crimson"></i> Browse Resources
+            </h1>
+            <p style="color: var(--text-secondary); margin: 0;">Find the perfect space or equipment for your needs</p>
+        </div>
+        {% if current_user.is_authenticated %}
+        <div style="display: flex; gap: 12px; align-items: center;">
+            {% if current_user.role.value in ['staff', 'admin'] %}
+            <a href="{{ url_for('resources.create') }}" class="btn-iu btn-iu-primary">
+                <i class="bi bi-plus-circle-fill"></i> Create Resource
+            </a>
+            {% endif %}
+            {% if current_user.role.value == 'admin' %}
+            <a href="{{ url_for('admin.dashboard') }}" class="btn-iu btn-iu-outline">
+                <i class="bi bi-shield-lock-fill"></i> Admin
+            </a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Search Bar -->
+    <form method="get" class="search-bar-iu" style="margin-bottom: 32px;">
+        <input type="text" class="search-input-iu" name="query" value="{{ query }}" placeholder="Search by name, category, or location...">
+        <button type="submit" class="search-btn-iu">
+            <i class="bi bi-search"></i> Search
+        </button>
+    </form>
+
+    {% if current_user.is_authenticated and current_user.role.value in ['staff', 'admin'] %}
+    <div class="alert-iu alert-iu-info" style="margin-bottom: 24px;">
+        <i class="bi bi-info-circle-fill"></i>
+        <div>
+            <strong>{{ current_user.role.value|title }} Access:</strong>
+            {% if current_user.role.value == 'admin' %}
+            You can manage all resources, approve bookings, and moderate content.
+            {% else %}
+            You can create and manage your own resources.
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Main Content: Filters + Grid -->
+<div class="container">
+    <div style="display: grid; grid-template-columns: 280px 1fr; gap: 32px;">
+        <!-- Filters Sidebar -->
+        <div>
+            <div class="filter-card-iu">
+                <h3 class="filter-title-iu">
+                    <i class="bi bi-funnel-fill"></i> Filters
+                </h3>
+                <form method="GET" action="{{ url_for('resources.list_resources') }}">
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Category</label>
+                        <select class="form-control-iu" name="category">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                            <option value="{{ category.name }}" {% if filters.get('category') == category.name %}selected{% endif %}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Location</label>
+                        <select class="form-control-iu" name="location">
+                            <option value="">All Locations</option>
+                            {% for location in locations %}
+                            <option value="{{ location.name }}" {% if filters.get('location') == location.name %}selected{% endif %}>{{ location.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Min Capacity</label>
+                        <input type="number" class="form-control-iu" name="capacity_min" value="{{ filters.get('capacity_min', '') }}" min="0" placeholder="Any">
+                    </div>
+
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Available On</label>
+                        <input type="date" class="form-control-iu" name="date" value="{{ filters.get('date', '') }}">
+                        <p class="form-text-iu">Find resources available on specific date</p>
+                    </div>
+
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Sort By</label>
+                        <select class="form-control-iu" name="sort">
+                            <option value="recent" {% if filters.get('sort') == 'recent' or not filters.get('sort') %}selected{% endif %}>Recent</option>
+                            <option value="most_booked" {% if filters.get('sort') == 'most_booked' %}selected{% endif %}>Most Booked</option>
+                            <option value="top_rated" {% if filters.get('sort') == 'top_rated' %}selected{% endif %}>Top Rated</option>
+                        </select>
+                    </div>
+
+                    <div style="display: grid; gap: 12px; margin-top: 24px;">
+                        <button type="submit" class="btn-iu btn-iu-primary" style="width: 100%;">
+                            <i class="bi bi-check-circle-fill"></i> Apply Filters
+                        </button>
+                        <a href="{{ url_for('resources.list_resources') }}" class="btn-iu btn-iu-secondary" style="width: 100%;">
+                            <i class="bi bi-x-circle-fill"></i> Clear All
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Resource Grid -->
+        <div>
+            {% if resources %}
+            <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">
+                <i class="bi bi-check-circle-fill text-crimson"></i> Showing {{ resources|length }} resource{{ 's' if resources|length != 1 else '' }}
+            </p>
+            
+            <div class="grid-iu">
+                {% for resource in resources %}
+                <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" style="text-decoration: none; color: inherit;">
+                    <div class="card-iu">
+                        {% set resource_images = resource.get_images() %}
+                        {% if resource_images %}
+                            {% if resource_images[0].startswith('resources/') %}
+                                {% set image_path = 'uploads/' + resource_images[0] %}
+                            {% else %}
+                                {% set image_path = 'img/' + resource_images[0] %}
+                            {% endif %}
+                            <img src="{{ url_for('static', filename=image_path) }}" 
+                                 class="card-iu-image" 
+                                 alt="{{ resource.title }}"
+                                 loading="lazy"
+                                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'280\' height=\'240\'%3E%3Crect fill=\'%23F7EBE0\' width=\'280\' height=\'240\'/%3E%3C/svg%3E';">
+                        {% else %}
+                            <div class="card-iu-image" style="background: linear-gradient(135deg, #F7EBE0 0%, #FFF8F0 100%); display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-bookmark-star" style="font-size: 4rem; color: var(--iu-crimson); opacity: 0.3;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-iu-body">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px; min-height: 24px;">
+                                <h3 class="card-iu-title" style="flex: 1; margin-right: 8px;">{{ resource.title }}</h3>
+                                {% if resource.rating_count > 0 %}
+                                <div class="rating-iu" style="flex-shrink: 0;">
+                                    <i class="bi bi-star-fill"></i>
+                                    <span>{{ "%.1f"|format(resource.rating_avg) }}</span>
+                                </div>
+                                {% else %}
+                                <div style="width: 0; height: 0;"></div>
+                                {% endif %}
+                            </div>
+                            
+                            <p class="card-iu-subtitle" style="margin-bottom: 12px; min-height: 20px;">
+                                <i class="bi bi-geo-alt-fill"></i> {{ resource.location or 'Campus Location' }}
+                            </p>
+                            
+                            <p class="card-iu-text" style="margin-bottom: 16px; flex-grow: 1; min-height: 60px;">
+                                {{ (resource.description or 'No description available.')[:100] }}{% if resource.description and resource.description|length > 100 %}...{% endif %}
+                            </p>
+                            
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto;">
+                                <span class="badge-iu badge-iu-light">
+                                    <i class="bi bi-people-fill"></i> {{ resource.capacity }}
+                                </span>
+                                {% if resource.requires_approval %}
+                                <span class="badge-iu badge-iu-warning">
+                                    <i class="bi bi-clock-fill"></i> Approval
+                                </span>
+                                {% else %}
+                                <span class="badge-iu badge-iu-success">
+                                    <i class="bi bi-check-circle-fill"></i> Instant
+                                </span>
+                                {% endif %}
+                                {% if resource.rating_count > 0 %}
+                                <span class="badge-iu badge-iu-light">
+                                    <i class="bi bi-star-fill"></i> {{ resource.rating_count }} review{{ 's' if resource.rating_count != 1 else '' }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            
+            {% else %}
+            <!-- Empty State -->
+            <div style="text-align: center; padding: 80px 24px; background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm);">
+                <i class="bi bi-search" style="font-size: 64px; color: var(--border-color); margin-bottom: 24px; display: block;"></i>
+                <h3 style="font-size: 24px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">No Resources Found</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 24px;">Try adjusting your filters or search term</p>
+                {% if current_user.is_authenticated and current_user.role.value in ['staff', 'admin'] %}
+                <a href="{{ url_for('resources.create') }}" class="btn-iu btn-iu-primary">
+                    <i class="bi bi-plus-circle-fill"></i> Create First Resource
+                </a>
+                {% else %}
+                <a href="{{ url_for('resources.list_resources') }}" class="btn-iu btn-iu-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Clear Filters
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

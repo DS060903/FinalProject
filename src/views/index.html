@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}IU Campus Resource Hub - Discover & Book Resources{% endblock %}
+
+{% block content %}
+<!-- Hero Section (Airbnb-inspired) -->
+<div class="hero-iu">
+    <div class="container">
+        {% if current_user.is_authenticated %}
+        <div style="margin-bottom: 20px;">
+            <span class="badge-iu badge-iu-{{ 'crimson' if current_user.role.value == 'admin' else 'warning' if current_user.role.value == 'staff' else 'light' }}" style="font-size: 14px;">
+                <i class="bi bi-person-circle"></i> Welcome back, {{ current_user.email.split('@')[0] }} ({{ current_user.role.value|title }})
+            </span>
+        </div>
+        {% endif %}
+        <h1>Discover Campus Resources at Indiana University</h1>
+        <p>Find and book study spaces, equipment, and facilities with ease</p>
+
+        <!-- Airbnb-style Search Bar -->
+        <form method="GET" action="{{ url_for('resources.list_resources') }}" class="search-bar-iu">
+            <input type="text" class="search-input-iu" name="query" placeholder="What are you looking for?" aria-label="Search resources">
+            <select class="search-select-iu" name="category" aria-label="Filter by category">
+                <option value="">All Categories</option>
+                {% for category in categories %}
+                <option value="{{ category.name }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit" class="search-btn-iu">
+                <i class="bi bi-search"></i> Search
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Featured Resources Section -->
+<div class="container section-spacing">
+{% if resources %}
+    <div class="page-header-iu">
+        <h1><i class="bi bi-star-fill text-crimson"></i> Top-Rated Resources</h1>
+        <p>Explore the most popular spaces and equipment on campus</p>
+    </div>
+    
+    <!-- Airbnb-style Grid -->
+    <div class="grid-iu" style="gap: 32px;">
+        {% for resource in resources[:4] %}
+        <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" style="text-decoration: none; color: inherit;">
+            <div class="card-iu" style="height: 100%;">
+            {% set resource_images = resource.get_images() %}
+            {% if resource_images %}
+                    {% if resource_images[0].startswith('resources/') %}
+                        {% set image_path = 'uploads/' + resource_images[0] %}
+                    {% else %}
+                        {% set image_path = 'img/' + resource_images[0] %}
+                    {% endif %}
+                    <img src="{{ url_for('static', filename=image_path) }}" 
+                         class="card-iu-image" 
+                 alt="{{ resource.title }}"
+                         onerror="this.src='{{ url_for('static', filename='img/placeholder.png') }}';">
+            {% else %}
+                    <div class="card-iu-image" style="background: linear-gradient(135deg, #F7EBE0 0%, #FFF8F0 100%); display: flex; align-items: center; justify-content: center;">
+                        <i class="bi bi-bookmark-star" style="font-size: 4rem; color: var(--iu-crimson); opacity: 0.3;"></i>
+                    </div>
+                {% endif %}
+                
+                <div class="card-iu-body" style="padding: 24px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px; min-height: 28px;">
+                        <h3 class="card-iu-title" style="flex: 1; margin-right: 12px; font-size: 20px; line-height: 1.3;">{{ resource.title }}</h3>
+                    {% if resource.rating_count > 0 %}
+                        <div class="rating-iu" style="flex-shrink: 0;">
+                            <i class="bi bi-star-fill"></i>
+                            <span>{{ "%.1f"|format(resource.rating_avg) }}</span>
+                        </div>
+                        {% else %}
+                        <div style="width: 0; height: 0;"></div>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="card-iu-subtitle" style="margin-bottom: 16px; min-height: 24px; font-size: 14px; color: var(--text-secondary);">
+                        <i class="bi bi-geo-alt-fill"></i> {{ resource.location or 'Campus' }}
+                    </p>
+                    
+                    <p class="card-iu-text" style="margin-bottom: 20px; flex-grow: 1; min-height: 72px; font-size: 15px; line-height: 1.6; color: var(--text-secondary);">{{ (resource.description or 'No description available.')[:100] }}{% if resource.description and resource.description|length > 100 %}...{% endif %}</p>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: auto; flex-wrap: wrap;">
+                        <span class="badge-iu badge-iu-light" style="padding: 8px 14px; font-size: 13px;">
+                            <i class="bi bi-people-fill"></i> Cap. {{ resource.capacity }}
+                        </span>
+                        {% if resource.requires_approval %}
+                        <span class="badge-iu badge-iu-warning" style="padding: 8px 14px; font-size: 13px;">
+                            <i class="bi bi-clock-fill"></i> Approval Required
+                        </span>
+                        {% else %}
+                        <span class="badge-iu badge-iu-success" style="padding: 8px 14px; font-size: 13px;">
+                            <i class="bi bi-check-circle-fill"></i> Instant Book
+                        </span>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    
+    <div style="text-align: center; margin-top: 40px;">
+        <a href="{{ url_for('resources.list_resources') }}" class="btn-iu btn-iu-primary btn-iu-lg">
+            Browse All Resources <i class="bi bi-arrow-right"></i>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Features Section (Airbnb-inspired) -->
+<div class="container section-spacing">
+    <div class="page-header-iu" style="text-align: center;">
+        <h1>Why IU Resource Hub?</h1>
+        <p>Everything you need to discover and book campus resources</p>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 32px; margin-top: 40px;">
+        <div style="text-align: center; padding: 32px 24px; background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.boxShadow='var(--shadow-md)'; this.style.transform='translateY(-4px)';" onmouseout="this.style.boxShadow='var(--shadow-sm)'; this.style.transform='translateY(0)';">
+            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="bi bi-calendar-check-fill" style="font-size: 28px; color: white;"></i>
+            </div>
+            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Easy Booking</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Book campus resources in just a few clicks. Get instant approval for open resources.</p>
+        </div>
+        
+        <div style="text-align: center; padding: 32px 24px; background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.boxShadow='var(--shadow-md)'; this.style.transform='translateY(-4px)';" onmouseout="this.style.boxShadow='var(--shadow-sm)'; this.style.transform='translateY(0)';">
+            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="bi bi-chat-dots-fill" style="font-size: 28px; color: white;"></i>
+            </div>
+            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Direct Messaging</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Communicate directly with resource owners and administrators through secure messaging.</p>
+    </div>
+        
+        <div style="text-align: center; padding: 32px 24px; background: white; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); transition: var(--transition);" onmouseover="this.style.boxShadow='var(--shadow-md)'; this.style.transform='translateY(-4px)';" onmouseout="this.style.boxShadow='var(--shadow-sm)'; this.style.transform='translateY(0)';">
+            <div style="width: 64px; height: 64px; background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="bi bi-star-fill" style="font-size: 28px; color: white;"></i>
+            </div>
+            <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">Rate & Review</h3>
+            <p style="color: var(--text-secondary); line-height: 1.6; margin: 0;">Share your experience and help others make informed decisions about resources.</p>
+        </div>
+    </div>
+</div>
+
+<!-- CTA Section -->
+<div class="container section-spacing">
+    <div style="background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); border-radius: var(--border-radius-xl); padding: 64px 48px; text-align: center; color: white;">
+        <h2 style="font-size: 36px; font-weight: 700; margin-bottom: 16px;">Ready to Get Started?</h2>
+        <p style="font-size: 18px; opacity: 0.9; margin-bottom: 32px; max-width: 600px; margin-left: auto; margin-right: auto;">Join students and staff discovering the easiest way to book campus resources at Indiana University</p>
+        {% if current_user.is_authenticated %}
+        <a href="{{ url_for('resources.list_resources') }}" class="btn-iu btn-iu-secondary btn-iu-lg" style="background: white; color: var(--iu-crimson);">
+            <i class="bi bi-grid-3x3-gap-fill"></i> Explore Resources
+        </a>
+        {% else %}
+        <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('auth.register') }}" class="btn-iu btn-iu-secondary btn-iu-lg" style="background: white; color: var(--iu-crimson);">
+                <i class="bi bi-person-plus-fill"></i> Sign Up Free
+            </a>
+            <a href="{{ url_for('auth.login') }}" class="btn-iu btn-iu-outline btn-iu-lg" style="border-color: white; color: white;">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

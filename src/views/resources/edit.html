@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Resource - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px; max-width: 800px;">
+    <!-- Header -->
+    <div style="margin-bottom: 32px;">
+        <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 16px; font-size: 14px; font-weight: 500;">
+            <i class="bi bi-arrow-left"></i> Back to Resource
+        </a>
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+            <i class="bi bi-pencil-fill text-crimson"></i> Edit Resource
+        </h1>
+        <p style="color: var(--text-secondary); margin: 0;">Update resource details and settings</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card-iu" style="padding: 48px;">
+        <form method="POST" action="{{ url_for('resources.edit', resource_id=resource.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            
+            <!-- Title -->
+            <div class="form-group-iu">
+                <label class="form-label-iu" style="font-size: 15px; font-weight: 600;">
+                    <i class="bi bi-card-heading-fill"></i> Resource Title <span style="color: var(--iu-crimson);">*</span>
+                </label>
+                <input type="text" class="form-control-iu" name="title" value="{{ resource.title }}" required style="padding: 14px 18px; font-size: 15px;">
+                <p class="form-text-iu" style="margin-top: 8px;">Choose a clear, descriptive name for your resource</p>
+            </div>
+            
+            <!-- Description -->
+            <div class="form-group-iu">
+                <label class="form-label-iu" style="font-size: 15px; font-weight: 600;">
+                    <i class="bi bi-text-paragraph"></i> Description
+                </label>
+                <textarea class="form-control-iu" name="description" rows="5" style="padding: 14px 18px; font-size: 15px; resize: vertical;">{{ resource.description or '' }}</textarea>
+                <p class="form-text-iu" style="margin-top: 8px;">Help users understand what this resource offers and why they should book it</p>
+            </div>
+            
+            <!-- Category & Location -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 8px;">
+                <div class="form-group-iu">
+                    <label class="form-label-iu" style="font-size: 15px; font-weight: 600;">
+                        <i class="bi bi-tag-fill"></i> Category
+                    </label>
+                    <select class="form-control-iu" name="category" style="padding: 14px 18px; font-size: 15px;">
+                        <option value="">Select category...</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name }}" {% if resource.category == category.name %}selected{% endif %}>{{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-text-iu" style="margin-top: 8px;">What type of resource is this?</p>
+                </div>
+                
+                <div class="form-group-iu">
+                    <label class="form-label-iu" style="font-size: 15px; font-weight: 600;">
+                        <i class="bi bi-geo-alt-fill"></i> Location
+                    </label>
+                    <select class="form-control-iu" name="location" style="padding: 14px 18px; font-size: 15px;">
+                        <option value="">Select location...</option>
+                        {% for location in locations %}
+                        <option value="{{ location.name }}" {% if resource.location == location.name %}selected{% endif %}>{{ location.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <p class="form-text-iu" style="margin-top: 8px;">Where is it located?</p>
+                </div>
+            </div>
+            
+            <!-- Capacity & Status -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 8px;">
+                <div class="form-group-iu">
+                    <label class="form-label-iu" style="font-size: 15px; font-weight: 600;">
+                        <i class="bi bi-people-fill"></i> Capacity
+                    </label>
+                    <input type="number" class="form-control-iu" name="capacity" value="{{ resource.capacity }}" min="1" required style="padding: 14px 18px; font-size: 15px;">
+                    <p class="form-text-iu" style="margin-top: 8px;">Maximum number of people</p>
+                </div>
+                
+                <div class="form-group-iu">
+                    <label class="form-label-iu" style="font-size: 15px; font-weight: 600;">
+                        <i class="bi bi-toggle-on-fill"></i> Status
+                    </label>
+                    <select class="form-control-iu" name="status" required style="padding: 14px 18px; font-size: 15px;">
+                        <option value="draft" {% if resource.status.value == 'draft' %}selected{% endif %}>Draft (hidden)</option>
+                        <option value="published" {% if resource.status.value == 'published' %}selected{% endif %}>Published (visible)</option>
+                        <option value="archived" {% if resource.status.value == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                    <p class="form-text-iu" style="margin-top: 8px;">Published resources are visible to all users</p>
+                </div>
+            </div>
+            
+            <!-- Requires Approval -->
+            <div class="card-iu" style="background: #FFF8F0; padding: 24px; border-left: 4px solid var(--iu-crimson); margin-top: 8px; margin-bottom: 32px;">
+                <label style="display: flex; align-items: start; gap: 16px; cursor: pointer; margin: 0;">
+                    <input type="checkbox" name="requires_approval" {% if resource.requires_approval %}checked{% endif %} style="margin-top: 4px; width: 20px; height: 20px; cursor: pointer; accent-color: var(--iu-crimson);">
+                    <div>
+                        <strong style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; color: var(--text-primary); font-size: 16px;">
+                            <i class="bi bi-shield-check-fill" style="color: var(--iu-crimson);"></i> Require Approval for Bookings
+                        </strong>
+                        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0;">
+                            If checked, bookings will be pending until approved by an administrator. Otherwise, bookings are automatically approved.
+                        </p>
+                    </div>
+                </label>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div style="display: flex; gap: 16px; padding-top: 8px; border-top: 1px solid var(--border-color);">
+                <button type="submit" class="btn-iu btn-iu-primary" style="flex: 1; padding: 16px 24px; font-size: 16px; font-weight: 600;">
+                    <i class="bi bi-check-circle-fill"></i> Save Changes
+                </button>
+                <a href="{{ url_for('resources.detail', resource_id=resource.id) }}" class="btn-iu btn-iu-secondary" style="flex: 1; padding: 16px 24px; font-size: 16px;">
+                    <i class="bi bi-x-circle-fill"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

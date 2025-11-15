@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block title %}Messages for Booking {{ booking.id }} - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 40px; margin-bottom: 64px; max-width: 1000px;">
+    <!-- Header with Back Button -->
+    <div style="margin-bottom: 32px;">
+        <a href="{{ url_for('messages_list.my_messages') }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 20px; font-size: 14px; font-weight: 500;">
+            <i class="bi bi-arrow-left"></i> Back to All Conversations
+        </a>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0;">
+                <i class="bi bi-chat-dots-fill text-crimson"></i> Booking #{{ booking.id }} Conversation
+            </h1>
+            <a href="{{ url_for('bookings.detail', booking_id=booking.id) }}" class="btn-iu btn-iu-outline">
+                <i class="bi bi-info-circle-fill"></i> Booking Details
+            </a>
+        </div>
+    </div>
+    
+    <!-- Booking Context Card -->
+    <div class="card-iu" style="margin-bottom: 20px; padding: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px;">
+            <div>
+                <p class="form-label-iu" style="margin-bottom: 8px; font-size: 13px;">Resource</p>
+                <strong style="color: var(--text-primary); font-size: 16px;"><i class="bi bi-building-fill"></i> {{ resource.title }}</strong>
+            </div>
+            <div>
+                <p class="form-label-iu" style="margin-bottom: 8px; font-size: 13px;">Date & Time</p>
+                <strong style="color: var(--text-primary); font-size: 16px;">{{ booking.start_dt.strftime('%b %d, %I:%M %p') }}</strong>
+            </div>
+            <div>
+                <p class="form-label-iu" style="margin-bottom: 8px; font-size: 13px;">Status</p>
+                <span class="badge-iu {% if booking.status.value == 'approved' %}badge-iu-success{% elif booking.status.value == 'pending' %}badge-iu-warning{% elif booking.status.value == 'completed' %}badge-iu-light{% else %}badge-iu-crimson{% endif %}" style="font-size: 13px; padding: 6px 12px;">
+                    {{ booking.status.value|title }}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Participants Info Card -->
+    <div class="card-iu" style="background: #FFF8F0; margin-bottom: 32px; padding: 24px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <i class="bi bi-people-fill" style="color: var(--iu-crimson); font-size: 24px;"></i>
+                <strong style="color: var(--text-primary); font-size: 16px;">Conversation Participants:</strong>
+            </div>
+            <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="badge-iu badge-iu-info" style="font-size: 13px; padding: 6px 12px;">
+                        <i class="bi bi-person-circle-fill"></i> Requester
+                    </span>
+                    <span style="color: var(--text-secondary); font-size: 14px;">{{ booking.user.email }}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="badge-iu badge-iu-warning" style="font-size: 13px; padding: 6px 12px;">
+                        <i class="bi bi-shield-check-fill"></i> Resource Owner
+                    </span>
+                    {% set owner = resource.creator %}
+                    <span style="color: var(--text-secondary); font-size: 14px;">{{ owner.email if owner else 'Unknown' }}</span>
+                </div>
+                {% if current_user.role.value == 'admin' %}
+                <div>
+                    <span class="badge-iu badge-iu-crimson" style="font-size: 13px; padding: 6px 12px;">
+                        <i class="bi bi-shield-lock-fill"></i> You (Admin)
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Messages Card -->
+    <div class="card-iu" style="margin-bottom: 32px; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); padding: 24px; color: white;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h3 style="font-size: 20px; font-weight: 600; margin: 0 0 6px 0;">
+                        <i class="bi bi-chat-text-fill"></i> Messages
+                    </h3>
+                    <small style="opacity: 0.9; font-size: 14px;">{{ pagination.total if pagination else 0 }} message{{ 's' if pagination and pagination.total != 1 else '' }}</small>
+                </div>
+                {% if current_user.role.value == 'admin' %}
+                <span class="badge-iu badge-iu-light" style="font-size: 13px; padding: 6px 12px;">
+                    <i class="bi bi-shield-lock-fill"></i> Admin Mode
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div style="background: #FFF8F0; padding: 32px; min-height: 400px; max-height: 600px; overflow-y: auto;" id="messageContainer">
+            {% if messages %}
+            <div style="display: flex; flex-direction: column; gap: 20px;">
+                {% for message in messages %}
+                {% set is_current_user = message.sender_id == current_user.id %}
+                {% set is_requester = message.sender_id == booking.user_id %}
+                {% set is_admin = message.sender.role.value == 'admin' %}
+                
+                <!-- Message Bubble -->
+                <div style="display: flex; {{ 'justify-content: flex-end;' if is_current_user else 'justify-content: flex-start;' }}">
+                    <div style="max-width: 70%;">
+                        <!-- Sender Info (only show for other people's messages) -->
+                        {% if not is_current_user %}
+                        <div style="margin-bottom: 8px;">
+                            {% if is_admin %}
+                            <span class="badge-iu badge-iu-crimson" style="font-size: 12px; padding: 4px 10px;">
+                                <i class="bi bi-shield-lock-fill"></i> Admin
+                            </span>
+                            {% elif is_requester %}
+                            <span class="badge-iu badge-iu-info" style="font-size: 12px; padding: 4px 10px;">
+                                <i class="bi bi-person-circle-fill"></i> Requester
+                            </span>
+                            {% else %}
+                            <span class="badge-iu badge-iu-warning" style="font-size: 12px; padding: 4px 10px;">
+                                <i class="bi bi-shield-check-fill"></i> Owner
+                            </span>
+                            {% endif %}
+                            <small style="color: var(--text-muted); margin-left: 8px; font-size: 13px;">{{ message.sender.email.split('@')[0] }}</small>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Message Content -->
+                        <div style="padding: 16px 20px; border-radius: var(--border-radius-lg); box-shadow: var(--shadow-sm); background: {{ 'var(--iu-crimson)' if is_current_user else 'white' }}; color: {{ 'white' if is_current_user else 'var(--text-primary)' }}; border-radius: {{ 'var(--border-radius-lg) 4px var(--border-radius-lg) var(--border-radius-lg)' if is_current_user else '4px var(--border-radius-lg) var(--border-radius-lg) var(--border-radius-lg)' }};">
+                            <!-- Recipient badge (if specified) -->
+                            {% if message.recipient_id %}
+                            <div style="margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid {{ 'rgba(255,255,255,0.3)' if is_current_user else 'rgba(0,0,0,0.1)' }};">
+                                <small style="opacity: 0.9; font-size: 12px;">
+                                    <i class="bi bi-arrow-right-circle-fill"></i> To: 
+                                    {% if message.recipient.role.value == 'admin' %}
+                                    <span class="badge-iu badge-iu-crimson" style="font-size: 11px; padding: 3px 8px;">
+                                        <i class="bi bi-shield-lock-fill"></i> Admin
+                                    </span>
+                                    {% else %}
+                                    <span class="badge-iu badge-iu-warning" style="font-size: 11px; padding: 3px 8px;">
+                                        <i class="bi bi-shield-check-fill"></i> {{ message.recipient.email.split('@')[0] }}
+                                    </span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            {% endif %}
+                            
+                            <div style="word-wrap: break-word; line-height: 1.6; font-size: 15px; margin-bottom: 12px;">
+                                {{ message.body }}
+                            </div>
+                            <div style="display: flex; align-items: center; justify-content: space-between; font-size: 12px; opacity: {{ '0.9' if is_current_user else '0.7' }}; margin-top: 8px;">
+                                <span>{{ message.created_at.strftime('%b %d, %I:%M %p') }}</span>
+                                {% if is_current_user %}
+                                <i class="bi bi-check2-all"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Badges and Actions -->
+                            {% if message.is_hidden or message.is_reported or current_user.role.value == 'admin' %}
+                            <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+                                {% if message.is_hidden %}
+                                <span class="badge-iu badge-iu-light" style="font-size: 11px; padding: 4px 8px;">
+                                    <i class="bi bi-eye-slash-fill"></i> Hidden
+                                </span>
+                                {% endif %}
+                                {% if message.is_reported %}
+                                <span class="badge-iu badge-iu-warning" style="font-size: 11px; padding: 4px 8px;">
+                                    <i class="bi bi-flag-fill"></i> Reported
+                                </span>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <!-- Action Buttons (show in dropdown for cleaner UI) -->
+                            {% if not message.is_hidden and not is_current_user %}
+                            <div style="margin-top: 12px;">
+                                <div style="position: relative; display: inline-block;">
+                                    <button class="btn-iu btn-iu-secondary" type="button" onclick="toggleMessageActions({{ message.id }})" style="padding: 6px 12px; font-size: 12px;">
+                                        <i class="bi bi-three-dots"></i>
+                                    </button>
+                                    <div id="actions-{{ message.id }}" style="display: none; position: absolute; bottom: 100%; right: 0; margin-bottom: 8px; background: white; border-radius: var(--border-radius); box-shadow: var(--shadow-lg); padding: 8px; min-width: 180px; z-index: 10;">
+                                        <form method="POST" action="{{ url_for('messaging.report_message_view', booking_id=booking.id, message_id=message.id) }}" style="margin-bottom: 4px;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="page" value="{{ pagination.page }}"/>
+                                            <button type="submit" class="btn-iu btn-iu-outline" style="width: 100%; padding: 8px 12px; font-size: 13px; justify-content: flex-start; color: var(--warning);" onclick="return confirm('Report this message for review?')">
+                                                <i class="bi bi-flag-fill"></i> Report Message
+                                            </button>
+                                        </form>
+                                        {% if current_user.role.value == 'admin' %}
+                                        <form method="POST" action="{{ url_for('messaging.hide_message_view', booking_id=booking.id, message_id=message.id) }}">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <input type="hidden" name="page" value="{{ pagination.page }}"/>
+                                            <button type="submit" class="btn-iu btn-iu-outline" style="width: 100%; padding: 8px 12px; font-size: 13px; justify-content: flex-start; color: var(--error);" onclick="return confirm('Hide this message? It will be removed from view.')">
+                                                <i class="bi bi-eye-slash-fill"></i> Hide (Admin)
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- Empty State -->
+            <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+                <i class="bi bi-chat-dots" style="font-size: 64px; opacity: 0.3; margin-bottom: 20px; display: block;"></i>
+                <h4 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">No messages yet</h4>
+                <p style="margin: 0; font-size: 15px;">Start the conversation by sending a message below</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Pagination -->
+    {% if pagination.pages > 1 %}
+    <div style="display: flex; justify-content: center; margin-bottom: 32px;">
+        <div style="display: flex; gap: 8px; align-items: center;">
+            <a href="{% if pagination.has_prev %}{{ url_for('messaging.list_messages', booking_id=booking.id, page=pagination.prev_num) }}{% else %}#{% endif %}" 
+               class="btn-iu btn-iu-secondary {% if not pagination.has_prev %}disabled{% endif %}" 
+               style="padding: 10px 16px; {% if not pagination.has_prev %}opacity: 0.5; cursor: not-allowed;{% endif %}">
+                <i class="bi bi-chevron-left"></i> Previous
+            </a>
+            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+            {% if page_num %}
+            <a href="{{ url_for('messaging.list_messages', booking_id=booking.id, page=page_num) }}" 
+               class="btn-iu {% if page_num == pagination.page %}btn-iu-primary{% else %}btn-iu-secondary{% endif %}" 
+               style="padding: 10px 16px; min-width: 44px;">
+                {{ page_num }}
+            </a>
+            {% else %}
+            <span style="padding: 10px 8px; color: var(--text-secondary);">…</span>
+            {% endif %}
+            {% endfor %}
+            <a href="{% if pagination.has_next %}{{ url_for('messaging.list_messages', booking_id=booking.id, page=pagination.next_num) }}{% else %}#{% endif %}" 
+               class="btn-iu btn-iu-secondary {% if not pagination.has_next %}disabled{% endif %}" 
+               style="padding: 10px 16px; {% if not pagination.has_next %}opacity: 0.5; cursor: not-allowed;{% endif %}">
+                Next <i class="bi bi-chevron-right"></i>
+            </a>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Send Message Form -->
+    {% if booking.status.value not in ['cancelled', 'rejected'] %}
+    <div class="card-iu" style="padding: 32px;">
+        <form method="POST" action="{{ url_for('messaging.create_message', booking_id=booking.id) }}" aria-label="Send message form" id="messageForm">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="page" value="{{ pagination.page }}"/>
+            
+            {% set is_requester = booking.user_id == current_user.id %}
+            {% set owner = resource.creator %}
+            {% set owner_is_admin = owner and owner.role.value == 'admin' %}
+            
+            <!-- Send To selector (only for requester) -->
+            {% if is_requester and owner %}
+            <div style="margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--border-color);">
+                <label class="form-label-iu" style="margin-bottom: 12px; font-size: 14px; font-weight: 600;">
+                    <i class="bi bi-send-fill"></i> Send to:
+                </label>
+                <div style="display: flex; gap: 20px; flex-wrap: wrap;">
+                    {% if not owner_is_admin %}
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 16px; background: #FFF8F0; border-radius: var(--border-radius); border: 2px solid var(--border-color); transition: var(--transition);">
+                        <input type="radio" name="recipient_id" value="{{ owner.id }}" checked style="margin: 0; cursor: pointer;">
+                        <span class="badge-iu badge-iu-warning" style="font-size: 13px; padding: 6px 12px;">
+                            <i class="bi bi-shield-check-fill"></i> Resource Owner
+                        </span>
+                    </label>
+                    {% endif %}
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 16px; background: #FFF8F0; border-radius: var(--border-radius); border: 2px solid var(--border-color); transition: var(--transition);">
+                        <input type="radio" name="recipient_id" value="admin" {% if owner_is_admin %}checked{% endif %} style="margin: 0; cursor: pointer;">
+                        <span class="badge-iu badge-iu-crimson" style="font-size: 13px; padding: 6px 12px;">
+                            <i class="bi bi-shield-lock-fill"></i> Admin
+                        </span>
+                    </label>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div style="display: flex; gap: 16px; align-items: flex-end;">
+                <div style="flex: 1;">
+                    <textarea 
+                        class="form-control-iu" 
+                        id="body" 
+                        name="body" 
+                        rows="3" 
+                        required 
+                        maxlength="2000" 
+                        placeholder="Type your message..."
+                        style="resize: none; padding: 16px 20px; font-size: 15px; line-height: 1.5;"
+                    ></textarea>
+                    <p class="form-text-iu" style="margin-top: 8px; font-size: 13px;">
+                        <i class="bi bi-info-circle-fill"></i> Press Ctrl+Enter to send • Max 2000 characters
+                    </p>
+                </div>
+                <button type="submit" class="btn-iu btn-iu-primary" style="padding: 16px 24px; min-width: 60px; height: fit-content;">
+                    <i class="bi bi-send-fill" style="font-size: 18px;"></i>
+                </button>
+            </div>
+        </form>
+    </div>
+    {% else %}
+    <div class="alert-iu alert-iu-warning" style="padding: 20px;">
+        <i class="bi bi-exclamation-triangle-fill"></i>
+        <div>
+            <strong>Conversation Closed</strong>
+            <p style="margin: 4px 0 0 0; font-size: 14px;">Messages cannot be sent for {{ booking.status.value }} bookings.</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-scroll to bottom of messages on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const messageContainer = document.getElementById('messageContainer');
+    if (messageContainer) {
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    }
+    
+    // Ctrl+Enter to send message
+    const textarea = document.getElementById('body');
+    if (textarea) {
+        textarea.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('messageForm').submit();
+            }
+        });
+    }
+});
+
+// Toggle message actions dropdown
+function toggleMessageActions(messageId) {
+    const dropdown = document.getElementById('actions-' + messageId);
+    const allDropdowns = document.querySelectorAll('[id^="actions-"]');
+    
+    // Close all other dropdowns
+    allDropdowns.forEach(d => {
+        if (d.id !== 'actions-' + messageId) {
+            d.style.display = 'none';
+        }
+    });
+    
+    // Toggle current dropdown
+    dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close dropdowns when clicking outside
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('[id^="actions-"]') && !event.target.closest('button[onclick*="toggleMessageActions"]')) {
+        document.querySelectorAll('[id^="actions-"]').forEach(d => d.style.display = 'none');
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <!-- Header -->
+    <div style="margin-bottom: 32px;">
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+            <i class="bi bi-shield-lock-fill text-crimson"></i> Admin Dashboard
+        </h1>
+        <p style="color: var(--text-secondary); margin: 0;">Welcome, {{ current_user.email }}</p>
+    </div>
+    
+        <!-- Admin-Only Banner -->
+    <div class="alert-iu alert-iu-error" style="margin-bottom: 32px; padding: 24px;">
+        <i class="bi bi-shield-lock-fill" style="font-size: 32px;"></i>
+        <div style="flex: 1;">
+            <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px; color: var(--text-primary);">
+                <span class="badge-iu badge-iu-crimson" style="font-size: 13px; padding: 6px 12px; margin-right: 12px;">ADMIN ONLY</span>
+                        Administrator Dashboard
+            </h3>
+            <p style="margin: 0; color: var(--text-secondary); line-height: 1.6;">
+                        <strong>Full System Access:</strong> You can approve/reject <strong>any booking</strong>, 
+                        manage <strong>all resources</strong>, moderate <strong>all messages and reviews</strong>, 
+                        view <strong>all users</strong>, and access <strong>complete audit logs</strong>. 
+                <span style="color: var(--iu-crimson); font-weight: 600;">These features are exclusive to Administrators.</span>
+                    </p>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 40px;">
+        <!-- Pending Bookings -->
+        <div class="card-iu" style="background: linear-gradient(135deg, #FFB800 0%, #FFA000 100%); color: white; padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: 0.95;">Pending Bookings</h3>
+                    <h2 style="font-size: 48px; font-weight: 700; margin: 0 0 4px 0;">{{ pending_bookings_count }}</h2>
+                    <p style="margin: 0; opacity: 0.9; font-size: 14px;">awaiting approval</p>
+                </div>
+                <i class="bi bi-calendar-check-fill" style="font-size: 48px; opacity: 0.3;"></i>
+            </div>
+            <a href="{{ url_for('admin.bookings') }}" class="btn-iu" style="background: white; color: #FFB800; padding: 10px 20px; font-size: 14px; width: 100%;">
+                <i class="bi bi-arrow-right-fill"></i> Manage
+            </a>
+        </div>
+
+        <!-- Reported Messages -->
+        <div class="card-iu" style="background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); color: white; padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+            <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: 0.95;">Flagged Messages</h3>
+                    <h2 style="font-size: 48px; font-weight: 700; margin: 0 0 4px 0;">{{ reported_messages_count }}</h2>
+                    <p style="margin: 0; opacity: 0.9; font-size: 14px;">for review</p>
+                </div>
+                <i class="bi bi-flag-fill" style="font-size: 48px; opacity: 0.3;"></i>
+            </div>
+            <a href="{{ url_for('admin.messages') }}" class="btn-iu" style="background: white; color: var(--iu-crimson); padding: 10px 20px; font-size: 14px; width: 100%;">
+                <i class="bi bi-arrow-right-fill"></i> Moderate
+            </a>
+        </div>
+
+        <!-- Hidden Reviews -->
+        <div class="card-iu" style="background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%); color: white; padding: 32px;">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 12px; opacity: 0.95;">Hidden Reviews</h3>
+                    <h2 style="font-size: 48px; font-weight: 700; margin: 0 0 4px 0;">{{ hidden_reviews_count }}</h2>
+                    <p style="margin: 0; opacity: 0.9; font-size: 14px;">currently hidden</p>
+                </div>
+                <i class="bi bi-eye-slash-fill" style="font-size: 48px; opacity: 0.3;"></i>
+            </div>
+            <a href="{{ url_for('admin.reviews') }}" class="btn-iu" style="background: white; color: #0066CC; padding: 10px 20px; font-size: 14px; width: 100%;">
+                <i class="bi bi-arrow-right-fill"></i> Manage
+            </a>
+        </div>
+    </div>
+
+    <!-- Role Comparison Card -->
+    <div class="card-iu" style="margin-bottom: 40px; padding: 32px;">
+        <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
+            <i class="bi bi-info-circle-fill text-crimson"></i> Role-Based Access Comparison
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px;">
+            <!-- Admin -->
+            <div style="background: #FFF8F0; padding: 24px; border-radius: var(--border-radius); border-left: 4px solid var(--iu-crimson);">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--iu-crimson);">
+                    <i class="bi bi-shield-lock-fill"></i> ADMIN
+                </h3>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+                                <li>✅ Approve/reject <strong>any</strong> booking</li>
+                                <li>✅ Manage <strong>all</strong> resources</li>
+                                <li>✅ Moderate <strong>all</strong> messages</li>
+                                <li>✅ Hide/unhide <strong>any</strong> review</li>
+                                <li>✅ View <strong>all</strong> users</li>
+                                <li>✅ Access audit logs</li>
+                                <li>✅ Full system control</li>
+                            </ul>
+                        </div>
+
+            <!-- Staff -->
+            <div style="background: #FFF8F0; padding: 24px; border-radius: var(--border-radius); border-left: 4px solid #FFB800;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #FFB800;">
+                    <i class="bi bi-person-badge-fill"></i> STAFF
+                </h3>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+                                <li>✅ Create/edit resources</li>
+                    <li>✅ Book resources</li>
+                    <li>✅ Send messages & write reviews</li>
+                                <li>✅ Report messages</li>
+                    <li>❌ Cannot approve/reject bookings</li>
+                    <li>❌ Cannot complete bookings</li>
+                                <li>❌ Cannot hide reviews</li>
+                                <li>❌ Cannot view all users</li>
+                                <li>❌ No audit log access</li>
+                                <li>⚠️ Limited management</li>
+                            </ul>
+                        </div>
+
+            <!-- Student -->
+            <div style="background: #FFF8F0; padding: 24px; border-radius: var(--border-radius); border-left: 4px solid #0066CC;">
+                <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 16px; color: #0066CC;">
+                    <i class="bi bi-person-fill"></i> STUDENT
+                </h3>
+                <ul style="margin: 0; padding-left: 20px; font-size: 14px; color: var(--text-secondary); line-height: 1.8;">
+                                <li>✅ Book resources</li>
+                                <li>✅ Send messages</li>
+                                <li>✅ Write reviews</li>
+                                <li>❌ Cannot approve bookings</li>
+                                <li>❌ Cannot create resources</li>
+                                <li>❌ Cannot moderate content</li>
+                                <li>⚠️ User-level access only</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+    
+    <!-- Quick Links -->
+    <div class="card-iu" style="padding: 32px;">
+        <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
+            <i class="bi bi-link-45deg-fill text-crimson"></i> Quick Links
+        </h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+            <a href="{{ url_for('admin.bookings') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-calendar-check-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+        </div>
+                            <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">Pending Approvals</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">Review and approve bookings</p>
+                        </div>
+                        </a>
+
+            <a href="{{ url_for('admin.all_bookings') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-calendar3-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+                    </div>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">All Bookings</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">View all bookings with messages</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('admin.messages') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-flag-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+            </div>
+                            <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">Flagged Messages</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">Moderate reported messages</p>
+                        </div>
+                        </a>
+
+            <a href="{{ url_for('admin.reviews') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-star-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+                    </div>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">Reviews</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">Manage and moderate reviews</p>
+                </div>
+            </a>
+
+            <a href="{{ url_for('admin.users') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-people-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+            </div>
+                            <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">Users</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">View all system users</p>
+                        </div>
+                        </a>
+
+            <a href="{{ url_for('admin.resources') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-building-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+                    </div>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">Resources</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">Manage all resources</p>
+                </div>
+            </a>
+        
+            <a href="{{ url_for('admin.logs') }}" class="card-iu" style="padding: 20px; text-decoration: none; color: inherit; display: flex; align-items: center; gap: 16px; transition: var(--transition);">
+                <div style="background: #FFF8F0; padding: 16px; border-radius: var(--border-radius);">
+                    <i class="bi bi-journal-text-fill" style="font-size: 24px; color: var(--iu-crimson);"></i>
+                </div>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin: 0 0 4px 0; color: var(--text-primary);">Audit Logs</h3>
+                    <p style="margin: 0; font-size: 13px; color: var(--text-secondary);">View admin action history</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</div>
+
+<style>
+.card-iu:hover {
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

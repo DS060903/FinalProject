@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Pending Approvals - Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px;">
+    <div style="display: grid; grid-template-columns: 260px 1fr; gap: 32px; align-items: start;">
+    <!-- Sidebar -->
+        <div>
+            {% include "admin/_sidebar.html" %}
+    </div>
+    
+    <!-- Main Content -->
+        <div>
+            <!-- Header -->
+            <div style="margin-bottom: 32px;">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+                    <i class="bi bi-calendar-check-fill text-crimson"></i> Pending Approvals
+                </h1>
+                <p style="color: var(--text-secondary); margin: 0;">Review and approve booking requests</p>
+            </div>
+
+        <!-- Admin-Only Alert -->
+            <div class="alert-iu alert-iu-error" style="margin-bottom: 32px; padding: 20px;">
+                <i class="bi bi-shield-lock-fill" style="font-size: 24px;"></i>
+                <div>
+                    <h3 style="font-size: 16px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">
+                        <span class="badge-iu badge-iu-crimson" style="font-size: 12px; padding: 4px 10px; margin-right: 8px;">ADMIN ONLY</span>
+                        Booking Approval Control
+                    </h3>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5;">
+                        As an <strong>Administrator</strong>, you can approve or reject <strong>any booking</strong> in the system, 
+                        regardless of resource ownership. <span style="color: var(--iu-crimson); font-weight: 600;">This is an admin-exclusive feature.</span>
+                    </p>
+                </div>
+        </div>
+        
+        {% if bookings %}
+            <!-- Bookings Table Card -->
+            <div class="card-iu" style="overflow: hidden;">
+                <div style="background: linear-gradient(135deg, var(--iu-crimson) 0%, var(--iu-crimson-dark) 100%); padding: 20px; color: white;">
+                    <h3 style="font-size: 18px; font-weight: 600; margin: 0;">
+                        <i class="bi bi-list-check-fill"></i> Bookings Requiring Approval
+                    </h3>
+            </div>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #FFF8F0; border-bottom: 2px solid var(--border-color);">
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">ID</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Requester</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Resource</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">Start</th>
+                                <th style="padding: 16px; text-align: left; font-weight: 600; color: var(--text-primary); font-size: 14px;">End</th>
+                                <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--text-primary); font-size: 14px;">Messages</th>
+                                <th style="padding: 16px; text-align: center; font-weight: 600; color: var(--text-primary); font-size: 14px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for booking in bookings %}
+                            <tr style="border-bottom: 1px solid var(--border-light); transition: var(--transition);">
+                                <td style="padding: 16px;">
+                                    <a href="{{ url_for('bookings.detail', booking_id=booking.id) }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 600;">
+                                        #{{ booking.id }}
+                                    </a>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <i class="bi bi-person-circle-fill" style="color: var(--text-secondary);"></i>
+                                        <div>
+                                            <div style="font-weight: 500; color: var(--text-primary);">{{ booking.user.email }}</div>
+                                            <span class="badge-iu badge-iu-info" style="font-size: 11px; padding: 3px 8px; margin-top: 4px;">{{ booking.user.role.value|title }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td style="padding: 16px;">
+                                    <a href="{{ url_for('resources.detail', resource_id=booking.resource_id) }}" style="color: var(--text-primary); text-decoration: none;">
+                                        <i class="bi bi-building-fill"></i> {{ booking.resource.title }}
+                                    </a>
+                                </td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ booking.start_dt.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td style="padding: 16px; color: var(--text-secondary); font-size: 14px;">{{ booking.end_dt.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td style="padding: 16px; text-align: center;">
+                                    {% set msg_data = booking_messages.get(booking.id, {}) %}
+                                    {% set msg_count = msg_data.get('count', 0) %}
+                                    {% if msg_count > 0 %}
+                                    <button class="btn-iu btn-iu-secondary" type="button" onclick="toggleMessages({{ booking.id }})" style="padding: 6px 12px; font-size: 13px;">
+                                        <i class="bi bi-chat-dots-fill"></i> {{ msg_count }}
+                                    </button>
+                                    {% else %}
+                                    <span style="color: var(--text-muted); font-size: 13px;">
+                                        <i class="bi bi-chat"></i> 0
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 16px;">
+                                    <div style="display: flex; gap: 8px; justify-content: center;">
+                                        <form method="POST" action="{{ url_for('admin.approve_booking_action', booking_id=booking.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn-iu btn-iu-primary" style="padding: 8px 16px; font-size: 13px;">
+                                                <i class="bi bi-check-circle-fill"></i> Approve
+                                            </button>
+                                        </form>
+                                        <form method="POST" action="{{ url_for('admin.reject_booking_action', booking_id=booking.id) }}" style="display: inline;">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                            <button type="submit" class="btn-iu btn-iu-outline" style="padding: 8px 16px; font-size: 13px;" onclick="return confirm('Reject this booking?')">
+                                                <i class="bi bi-x-circle-fill"></i> Reject
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- Expandable Messages Row -->
+                            {% set msg_data = booking_messages.get(booking.id, {}) %}
+                            {% if msg_data.get('count', 0) > 0 %}
+                            <tr id="messages-row-{{ booking.id }}" style="display: none; background: #FFF8F0;">
+                                <td colspan="7" style="padding: 24px;">
+                                    <div>
+                                        <h4 style="font-size: 16px; font-weight: 600; margin-bottom: 20px; color: var(--text-primary);">
+                                            <i class="bi bi-chat-left-text-fill"></i> Message Thread for Booking #{{ booking.id }}
+                                        </h4>
+                                        
+                                        <!-- Messages Display -->
+                                        <div style="margin-bottom: 24px; max-height: 400px; overflow-y: auto; display: grid; gap: 12px;">
+                                            {% for message in msg_data.get('messages', []) %}
+                                            {% set is_requester = message.sender_id == booking.user_id %}
+                                            <div style="background: white; padding: 16px; border-radius: var(--border-radius); border-left: 3px solid {{ 'var(--info)' if is_requester else 'var(--iu-crimson)' }};">
+                                                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                                        {% if is_requester %}
+                                                        <span class="badge-iu badge-iu-info" style="font-size: 11px; padding: 3px 8px;">
+                                                            <i class="bi bi-person-circle-fill"></i> Requester
+                                                        </span>
+                                                        {% else %}
+                                                        <span class="badge-iu badge-iu-crimson" style="font-size: 11px; padding: 3px 8px;">
+                                                            <i class="bi bi-shield-check-fill"></i> Admin/Owner
+                                                        </span>
+                                                        {% endif %}
+                                                        <strong style="font-size: 14px; color: var(--text-primary);">{{ message.sender.email }}</strong>
+                                                    </div>
+                                                    <small style="color: var(--text-muted); font-size: 12px;">{{ message.created_at.strftime('%b %d, %I:%M %p') }}</small>
+                                                </div>
+                                                <p style="margin: 0; color: var(--text-secondary); font-size: 14px; line-height: 1.5;">{{ message.body }}</p>
+                                            </div>
+                                            {% endfor %}
+                                        </div>
+                                        
+                                        <!-- Admin Reply Form -->
+                                        <div class="card-iu" style="background: white; border-left: 4px solid var(--iu-crimson);">
+                                            <div style="padding: 20px;">
+                                                <h4 style="font-size: 15px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary);">
+                                                    <i class="bi bi-reply-fill"></i> Send Message as Admin
+                                                </h4>
+                                                <form method="POST" action="{{ url_for('messaging.create_message', booking_id=booking.id) }}">
+                                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                                    <div class="form-group-iu">
+                                                        <textarea class="form-control-iu" name="body" rows="3" required placeholder="Type your message here..." maxlength="2000" style="resize: none;"></textarea>
+                                                        <p class="form-text-iu" style="margin-top: 6px;">Maximum 2000 characters</p>
+                                                    </div>
+                                                    <div style="display: flex; gap: 12px;">
+                                                        <button type="submit" class="btn-iu btn-iu-primary">
+                                                            <i class="bi bi-send-fill"></i> Send Message
+                                                        </button>
+                                                        <a href="{{ url_for('messaging.list_messages', booking_id=booking.id) }}" class="btn-iu btn-iu-secondary">
+                                                            <i class="bi bi-chat-left-text-fill"></i> View Full Thread
+                                                        </a>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+            </div>
+        </div>
+        {% else %}
+            <div class="alert-iu alert-iu-success" style="padding: 32px; text-align: center;">
+                <i class="bi bi-check-circle-fill" style="font-size: 48px; color: var(--success); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 8px; color: var(--text-primary);">All Clear!</h3>
+                <p style="margin: 0; color: var(--text-secondary);">No pending bookings requiring approval.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+</div>
+
+<script>
+function toggleMessages(bookingId) {
+    const row = document.getElementById('messages-row-' + bookingId);
+    if (row) {
+        row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
+    }
+}
+</script>
+{% endblock %}

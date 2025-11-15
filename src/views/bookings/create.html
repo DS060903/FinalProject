@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Create Booking - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 32px; margin-bottom: 48px; max-width: 700px;">
+    <!-- Header -->
+    <div style="margin-bottom: 32px;">
+        <a href="{{ url_for('resources.detail', resource_id=resource_id) }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 16px; font-size: 14px; font-weight: 500;">
+            <i class="bi bi-arrow-left"></i> Back to Resource
+        </a>
+        <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 8px 0;">
+            <i class="bi bi-calendar-plus-fill text-crimson"></i> Create Booking
+        </h1>
+        <p style="color: var(--text-secondary); margin: 0;">Reserve this resource for your desired time slot</p>
+    </div>
+
+    <!-- Form Card -->
+    <div class="card-iu" style="padding: 40px;">
+        <form method="POST" action="{{ url_for('bookings.create') }}" aria-label="Create booking form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <input type="hidden" name="resource_id" value="{{ resource_id }}">
+            
+            <div class="form-group-iu">
+                <label class="form-label-iu">
+                    <i class="bi bi-calendar-event-fill"></i> Start Date & Time <span style="color: var(--iu-crimson);">*</span>
+                </label>
+                <input type="datetime-local" class="form-control-iu" id="start_dt" name="start_dt" required aria-required="true">
+                <p class="form-text-iu">When do you want to start using this resource?</p>
+            </div>
+            
+            <div class="form-group-iu">
+                <label class="form-label-iu">
+                    <i class="bi bi-calendar-x-fill"></i> End Date & Time <span style="color: var(--iu-crimson);">*</span>
+                </label>
+                <input type="datetime-local" class="form-control-iu" id="end_dt" name="end_dt" required aria-required="true">
+                <p class="form-text-iu">When will you be finished using this resource?</p>
+            </div>
+            
+            <div style="display: flex; gap: 12px; margin-top: 32px;">
+                <button type="submit" class="btn-iu btn-iu-primary" style="flex: 1;">
+                    <i class="bi bi-check-circle-fill"></i> Create Booking
+                </button>
+                <a href="{{ url_for('resources.list_resources') }}" class="btn-iu btn-iu-secondary" style="flex: 1;">
+                    <i class="bi bi-x-circle-fill"></i> Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

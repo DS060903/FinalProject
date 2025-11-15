@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+{% block title %}{{ resource.title }} - IU Campus Resource Hub{% endblock %}
+
+{% block content %}
+<div class="container" style="margin-top: 24px; margin-bottom: 48px;">
+    <!-- Back Button -->
+    <a href="{{ url_for('resources.list_resources') }}" style="display: inline-flex; align-items: center; gap: 8px; color: var(--text-secondary); text-decoration: none; margin-bottom: 24px; font-size: 14px; font-weight: 500;">
+        <i class="bi bi-arrow-left"></i> Back to Resources
+    </a>
+
+    <!-- Hero Image Section -->
+    {% set resource_images = resource.get_images() %}
+    <div style="border-radius: var(--border-radius-lg); overflow: hidden; height: 400px; margin-bottom: 32px; box-shadow: var(--shadow-md); position: relative;">
+    {% if resource_images %}
+            {% if resource_images[0].startswith('resources/') %}
+                {% set image_path = 'uploads/' + resource_images[0] %}
+            {% else %}
+                {% set image_path = 'img/' + resource_images[0] %}
+            {% endif %}
+            <img src="{{ url_for('static', filename=image_path) }}" 
+         alt="{{ resource.title }}"
+                 style="width: 100%; height: 100%; object-fit: cover;"
+                 onerror="this.parentElement.style.background='linear-gradient(135deg, #F7EBE0 0%, #FFF8F0 100%)'; this.style.display='none';">
+    {% else %}
+            <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #F7EBE0 0%, #FFF8F0 100%); display: flex; align-items: center; justify-content: center;">
+                <i class="bi bi-bookmark-star" style="font-size: 6rem; color: var(--iu-crimson); opacity: 0.3;"></i>
+            </div>
+    {% endif %}
+        
+        <!-- Status Badge Overlay -->
+        {% if resource.status.value != 'published' %}
+        <div style="position: absolute; top: 16px; right: 16px;">
+            <span class="badge-iu badge-iu-light" style="font-size: 14px; padding: 8px 16px;">
+                <i class="bi bi-archive-fill"></i> {{ resource.status.value|title }}
+                    </span>
+        </div>
+                    {% endif %}
+                </div>
+
+    <!-- Main Content Layout: 2 Column -->
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 48px; align-items: start;">
+        <!-- Left Column: Details -->
+        <div>
+            <!-- Title & Location -->
+            <div style="margin-bottom: 24px; padding-bottom: 24px; border-bottom: 1px solid var(--border-color);">
+                <h1 style="font-size: 32px; font-weight: 700; color: var(--text-primary); margin: 0 0 12px 0;">
+                    {{ resource.title }}
+                </h1>
+                <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; gap: 4px; color: var(--text-secondary);">
+                        <i class="bi bi-geo-alt-fill"></i>
+                        <span style="font-size: 16px;">{{ resource.location or 'Campus Location' }}</span>
+                    </div>
+                {% if rating_count > 0 %}
+                    <div class="rating-iu" style="font-size: 16px;">
+                        <i class="bi bi-star-fill"></i>
+                        <span>{{ "%.1f"|format(rating_avg) }}</span>
+                        <span style="color: var(--text-secondary);">({{ rating_count }} review{{ 's' if rating_count != 1 else '' }})</span>
+                    </div>
+                    {% endif %}
+            </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                    <span class="badge-iu badge-iu-light">
+                        <i class="bi bi-people-fill"></i> Capacity: {{ resource.capacity }}
+                    </span>
+                    {% if resource.requires_approval %}
+                    <span class="badge-iu badge-iu-warning">
+                        <i class="bi bi-clock-fill"></i> Requires Approval
+                    </span>
+                    {% else %}
+                    <span class="badge-iu badge-iu-success">
+                        <i class="bi bi-check-circle-fill"></i> Auto-Approved
+                    </span>
+                    {% endif %}
+                </div>
+                </div>
+
+            <!-- Description -->
+            <div style="margin-bottom: 32px;">
+                <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 16px;">About this resource</h2>
+                <p style="color: var(--text-secondary); line-height: 1.6; font-size: 16px;">
+                    {{ resource.description or 'No description available for this resource.' }}
+                </p>
+                    </div>
+                    
+            <!-- Reviews Section -->
+            <div style="margin-bottom: 32px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+                <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 24px;">
+                    <i class="bi bi-star-fill text-crimson"></i> Reviews
+                    {% if rating_count > 0 %}
+                    <span style="font-size: 18px; color: var(--text-secondary); font-weight: 400;">({{ rating_count }})</span>
+                    {% endif %}
+                </h2>
+                
+                {% if reviews %}
+                <div style="display: grid; gap: 24px;">
+                {% for review in reviews %}
+                    <div class="card-iu" style="padding: 24px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                                    <strong style="font-size: 15px; color: var(--text-primary);">{{ review.user.email.split('@')[0] }}</strong>
+                                    <div class="star-rating-iu">
+                                        {% for i in range(5) %}
+                                        <i class="bi bi-star{{ '-fill' if i < review.rating else '' }}" style="color: {{ '#FFB800' if i < review.rating else '#E0E0E0' }};"></i>
+                                        {% endfor %}
+                                    </div>
+                                    {% if review.is_hidden %}
+                                    <span class="badge-iu badge-iu-light">Hidden</span>
+                                    {% endif %}
+                                </div>
+                                <p style="color: var(--text-secondary); margin: 0 0 8px 0; line-height: 1.5;">{{ review.comment }}</p>
+                                <small style="color: var(--text-muted); font-size: 13px;">{{ review.created_at.strftime('%B %d, %Y') }}</small>
+                            </div>
+                            
+                            {% if current_user.is_authenticated %}
+                            <div style="margin-left: 16px; display: flex; flex-direction: column; gap: 8px;">
+                                {% if current_user.role.value == 'admin' %}
+                                    {% if review.is_hidden %}
+                                <form method="POST" action="{{ url_for('reviews.unhide', resource_id=resource.id, review_id=review.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn-iu btn-iu-secondary" style="padding: 6px 12px; font-size: 13px;">
+                                        <i class="bi bi-eye-fill"></i> Unhide
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                <form method="POST" action="{{ url_for('reviews.hide', resource_id=resource.id, review_id=review.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn-iu btn-iu-outline" style="padding: 6px 12px; font-size: 13px;" onclick="return confirm('Hide this review?')">
+                                        <i class="bi bi-eye-slash-fill"></i> Hide
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                {% elif review.user_id != current_user.id %}
+                                    {# Regular users can report reviews (not their own) #}
+                                <form method="POST" action="{{ url_for('reviews.report', resource_id=resource.id, review_id=review.id) }}">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn-iu btn-iu-outline" style="padding: 6px 12px; font-size: 13px;" onclick="return confirm('Report this review for inappropriate content?')">
+                                        <i class="bi bi-flag-fill"></i> Report
+                                        </button>
+                                    </form>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert-iu alert-iu-info">
+                    <i class="bi bi-info-circle-fill"></i>
+                    <span>No reviews yet. Be the first to review this resource!</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Images Gallery -->
+            {% if current_user.is_authenticated and resource_images|length > 1 %}
+            <div style="margin-bottom: 32px; padding-top: 32px; border-top: 1px solid var(--border-color);">
+                <h2 style="font-size: 22px; font-weight: 600; margin-bottom: 24px;">
+                    <i class="bi bi-images text-crimson"></i> Image Gallery
+                </h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                    {% for image_path_item in resource_images %}
+                    <div style="border-radius: var(--border-radius); overflow: hidden; height: 200px; position: relative;">
+                        {% if image_path_item.startswith('resources/') %}
+                            {% set full_image_path = 'uploads/' + image_path_item %}
+                        {% else %}
+                            {% set full_image_path = 'img/' + image_path_item %}
+                        {% endif %}
+                        <a href="{{ url_for('static', filename=full_image_path) }}" target="_blank">
+                            <img src="{{ url_for('static', filename=full_image_path) }}" 
+                                 alt="Resource image"
+                                 style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s;"
+                                 onmouseover="this.style.transform='scale(1.05)'"
+                                 onmouseout="this.style.transform='scale(1)'">
+                        </a>
+                        {% if current_user.is_authenticated and (current_user.role.value in ['staff', 'admin'] or resource.created_by == current_user.id) %}
+                        <form method="POST" action="{{ url_for('resources.delete_image', resource_id=resource.id) }}" style="position: absolute; top: 8px; right: 8px;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <input type="hidden" name="image_path" value="{{ image_path_item }}">
+                            <button type="submit" class="btn-iu btn-iu-outline" style="padding: 4px 8px; background: white; border-radius: 50%; width: 32px; height: 32px;" onclick="return confirm('Delete this image?')">
+                                <i class="bi bi-x-lg"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Right Column: Booking Card (Sticky) -->
+        <div style="position: sticky; top: 100px;">
+            {% if resource.status.value != 'archived' %}
+            {% if current_user.is_authenticated %}
+            <div class="card-iu" style="padding: 24px;">
+                <h3 style="font-size: 20px; font-weight: 600; margin-bottom: 20px;">Book this resource</h3>
+                
+                <form method="POST" action="{{ url_for('bookings.create') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" name="resource_id" value="{{ resource.id }}">
+                    
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Start Date & Time</label>
+                        <input type="datetime-local" class="form-control-iu" name="start_dt" required>
+                        <p class="form-text-iu">Minimum booking: 15 minutes</p>
+                    </div>
+                    
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">End Date & Time</label>
+                        <input type="datetime-local" class="form-control-iu" name="end_dt" required>
+    </div>
+
+                    {% if resource.requires_approval %}
+                    <div class="alert-iu alert-iu-warning" style="font-size: 13px; padding: 12px;">
+                        <i class="bi bi-clock-fill"></i>
+                        <span>This booking requires approval</span>
+                    </div>
+                    {% else %}
+                    <div class="alert-iu alert-iu-success" style="font-size: 13px; padding: 12px;">
+                        <i class="bi bi-check-circle-fill"></i>
+                        <span>Instant booking - no approval needed</span>
+                    </div>
+                    {% endif %}
+                    
+                    <button type="submit" class="btn-iu btn-iu-primary" style="width: 100%; margin-top: 8px;">
+                        <i class="bi bi-calendar-check-fill"></i> Reserve
+                                </button>
+                            </form>
+                        </div>
+            
+            <!-- Write Review Card -->
+            {% if can_review %}
+            <div class="card-iu" style="padding: 24px; margin-top: 16px;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">
+                    {% if user_review %}<i class="bi bi-pencil-fill"></i> Edit Your Review{% else %}<i class="bi bi-star-fill"></i> Write a Review{% endif %}
+                </h3>
+                
+                <form method="POST" action="{{ url_for('reviews.create', resource_id=resource.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Rating</label>
+                        <select class="form-control-iu" name="rating" required>
+                            <option value="">Select rating</option>
+                            <option value="5" {% if user_review and user_review.rating == 5 %}selected{% endif %}>⭐⭐⭐⭐⭐ Excellent</option>
+                            <option value="4" {% if user_review and user_review.rating == 4 %}selected{% endif %}>⭐⭐⭐⭐ Very Good</option>
+                            <option value="3" {% if user_review and user_review.rating == 3 %}selected{% endif %}>⭐⭐⭐ Good</option>
+                            <option value="2" {% if user_review and user_review.rating == 2 %}selected{% endif %}>⭐⭐ Fair</option>
+                            <option value="1" {% if user_review and user_review.rating == 1 %}selected{% endif %}>⭐ Poor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group-iu">
+                        <label class="form-label-iu">Your Review</label>
+                        <textarea class="form-control-iu" name="comment" rows="4" required maxlength="1000" placeholder="Share your experience...">{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+                        <p class="form-text-iu">Maximum 1000 characters</p>
+                </div>
+                    
+                    <button type="submit" class="btn-iu btn-iu-primary" style="width: 100%;">
+                        <i class="bi bi-check-circle-fill"></i> {% if user_review %}Update{% else %}Submit{% endif %} Review
+                    </button>
+                </form>
+            </div>
+            {% elif current_user.is_authenticated %}
+            <div class="alert-iu alert-iu-info" style="margin-top: 16px; font-size: 13px;">
+                <i class="bi bi-info-circle-fill"></i>
+                <span>Complete a booking to leave a review</span>
+            </div>
+            {% endif %}
+        
+            <!-- Upload Images (Staff/Owner) -->
+            {% if current_user.role.value in ['staff', 'admin'] or resource.created_by == current_user.id %}
+            <div class="card-iu" style="padding: 24px; margin-top: 16px;">
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 16px;">
+                    <i class="bi bi-cloud-upload-fill"></i> Upload Images
+                </h3>
+                <form method="POST" action="{{ url_for('resources.upload_images', resource_id=resource.id) }}" enctype="multipart/form-data">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <div class="form-group-iu">
+                        <input type="file" class="form-control-iu" name="images" multiple accept="image/jpeg,image/png,image/webp">
+                        <p class="form-text-iu">JPG, PNG, WEBP • Max 2MB each</p>
+                    </div>
+                    <button type="submit" class="btn-iu btn-iu-primary" style="width: 100%;">
+                        <i class="bi bi-upload"></i> Upload
+                    </button>
+                </form>
+            </div>
+            {% endif %}
+            
+            {% else %}
+            <!-- Not Logged In -->
+            <div class="card-iu" style="padding: 32px; text-align: center;">
+                <i class="bi bi-lock-fill" style="font-size: 48px; color: var(--iu-crimson); margin-bottom: 16px; display: block;"></i>
+                <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 12px;">Log in to book</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px;">You need an account to reserve this resource</p>
+                <a href="{{ url_for('auth.login') }}" class="btn-iu btn-iu-primary" style="width: 100%;">
+                    <i class="bi bi-box-arrow-in-right"></i> Log In
+                </a>
+                <p style="margin-top: 12px; font-size: 14px; color: var(--text-secondary);">
+                    Don't have an account? <a href="{{ url_for('auth.register') }}" style="color: var(--iu-crimson); text-decoration: none; font-weight: 500;">Sign up</a>
+                </p>
+            </div>
+            {% endif %}
+            {% else %}
+            <!-- Archived Resource -->
+            <div class="alert-iu alert-iu-warning">
+                <i class="bi bi-archive-fill"></i>
+                <div>
+                    <strong>Resource Archived</strong>
+                    <p style="margin: 4px 0 0 0; font-size: 13px;">This resource is not available for booking</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Management Actions (Staff/Admin) -->
+    {% if current_user.is_authenticated %}
+        {% set is_owner = resource.created_by == current_user.id %}
+        {% set is_staff = current_user.role.value == 'staff' %}
+        {% set is_admin = current_user.role.value == 'admin' %}
+        {% set can_manage = is_owner or is_staff or is_admin %}
+        
+        {% if can_manage %}
+        <div style="margin-top: 48px; padding-top: 40px; border-top: 2px solid var(--border-color);">
+            <div class="card-iu" style="background: {% if is_admin %}#FFF0F0{% elif is_staff and not is_owner %}#FFF8F0{% else %}#F0F8FF{% endif %}; padding: 32px; border-left: 4px solid {% if is_admin %}var(--iu-crimson){% elif is_staff and not is_owner %}#FFB800{% else %}#0066CC{% endif %}; box-shadow: var(--shadow-md);">
+                <div style="margin-bottom: 24px;">
+                    <h3 style="font-size: 20px; font-weight: 600; color: var(--text-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                        {% if is_admin %}
+                            <i class="bi bi-shield-lock-fill" style="color: var(--iu-crimson); font-size: 24px;"></i>
+                            <span>Admin: Resource Management</span>
+                        {% elif is_staff and not is_owner %}
+                            <i class="bi bi-person-badge-fill" style="color: #FFB800; font-size: 24px;"></i>
+                            <span>Staff: Resource Management</span>
+                        {% else %}
+                            <i class="bi bi-tools" style="color: #0066CC; font-size: 24px;"></i>
+                            <span>Manage Your Resource</span>
+                        {% endif %}
+                    </h3>
+                    {% if (is_admin or is_staff) and not is_owner %}
+                    <div style="display: flex; align-items: center; gap: 8px; padding: 12px; background: white; border-radius: var(--border-radius); border-left: 3px solid {% if is_admin %}var(--iu-crimson){% else %}#FFB800{% endif %};">
+                        <i class="bi bi-info-circle-fill" style="color: {% if is_admin %}var(--iu-crimson){% else %}#FFB800{% endif %};"></i>
+                        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">
+                            Managing resource created by <strong>{{ resource.creator.email }}</strong>
+                        </p>
+    </div>
+    {% endif %}
+</div>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 16px;">
+                    <a href="{{ url_for('resources.edit', resource_id=resource.id) }}" class="btn-iu btn-iu-primary" style="padding: 14px 24px; font-size: 15px; min-width: 160px;">
+                        <i class="bi bi-pencil-fill"></i> Edit Resource
+                    </a>
+                    {% if resource.status.value == 'archived' %}
+                    <form method="POST" action="{{ url_for('resources.unarchive', resource_id=resource.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn-iu btn-iu-secondary" style="padding: 14px 24px; font-size: 15px; min-width: 160px;" onclick="return confirm('Unarchive this resource?')">
+                            <i class="bi bi-archive-fill"></i> Unarchive
+                        </button>
+                    </form>
+                    {% else %}
+                    <form method="POST" action="{{ url_for('resources.archive', resource_id=resource.id) }}" style="display: inline;">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        <button type="submit" class="btn-iu btn-iu-outline" style="padding: 14px 24px; font-size: 15px; min-width: 160px;" onclick="return confirm('Archive this resource? It will be hidden from public listings.')">
+                            <i class="bi bi-archive-fill"></i> Archive
+            </button>
+        </form>
+                    {% endif %}
+                </div>
+    </div>
+</div>
+{% endif %}
+    {% endif %}
+</div>
+{% endblock %}

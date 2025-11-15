@@ -1,0 +1,41 @@
+{# Admin Sidebar Component #}
+<div class="card-iu" style="padding: 24px; margin-bottom: 32px;">
+    <h3 style="font-size: 18px; font-weight: 600; margin-bottom: 24px; color: var(--text-primary);">
+        <i class="bi bi-shield-lock-fill text-crimson"></i> Admin Panel
+    </h3>
+    <nav style="display: flex; flex-direction: column; gap: 8px;">
+        <a href="{{ url_for('admin.dashboard') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+            <i class="bi bi-speedometer2-fill"></i> Dashboard
+        </a>
+        <a href="{{ url_for('admin.bookings') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.bookings' %}active{% endif %}">
+            <i class="bi bi-calendar-check-fill"></i> Pending Approvals
+        </a>
+        <a href="{{ url_for('admin.all_bookings') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.all_bookings' %}active{% endif %}">
+            <i class="bi bi-calendar3-fill"></i> All Bookings
+        </a>
+        <a href="{{ url_for('admin.messages') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.messages' %}active{% endif %}">
+            <i class="bi bi-flag-fill"></i> Flagged Messages
+        </a>
+        <a href="{{ url_for('admin.reviews') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.reviews' %}active{% endif %}">
+            <i class="bi bi-star-fill"></i> Reviews
+        </a>
+        <a href="{{ url_for('admin.users') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.users' %}active{% endif %}">
+            <i class="bi bi-people-fill"></i> Users
+        </a>
+        <a href="{{ url_for('admin.resources') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.resources' %}active{% endif %}">
+            <i class="bi bi-building-fill"></i> Resources
+        </a>
+        <a href="{{ url_for('admin.logs') }}" 
+           class="admin-nav-link {% if request.endpoint == 'admin.logs' %}active{% endif %}">
+            <i class="bi bi-journal-text-fill"></i> Audit Logs
+        </a>
+    </nav>
+</div>
+
